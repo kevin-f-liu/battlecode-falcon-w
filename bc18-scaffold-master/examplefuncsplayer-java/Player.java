@@ -1,7 +1,8 @@
 // import the API.
 // See xxx for the javadocs.
-import bc.*;
+import java.bc.*;
 
+// This is THEIR linked demo player file. 
 public class Player {
     public static void main(String[] args) {
         // You can use other files in this directory, and in subdirectories.

@@ -1,0 +1,4 @@
+import ../bc.*;
+public class FalconWBot {
+
+}
