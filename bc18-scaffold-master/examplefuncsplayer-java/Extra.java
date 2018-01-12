@@ -1,4 +1,4 @@
-import java.bc.*;
+import bc.*;
 
 //This is THEIR linked demo player file. 
 class Extra {
