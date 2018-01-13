@@ -22,4 +22,4 @@
 hs_err_pid*
 
 # All replays will be ignored 
-./replay*
+**/replay.*
