@@ -1,9 +1,12 @@
+// import the API.
+// See xxx for the javadocs.
 import bc.*;
 
-
 public class Player {
-	public static void main(String[] args) {
+    public static void main(String[] args) {
         // You can use other files in this directory, and in subdirectories.
+        Extra extra = new Extra(27);
+        System.out.println(extra.toString());
 
         // MapLocation is a data structure you'll use a lot.
         MapLocation loc = new MapLocation(Planet.Earth, 10, 20);
@@ -28,8 +31,8 @@ public class Player {
                 Unit unit = units.get(i);
 
                 // Most methods on gc take unit IDs, instead of the unit objects themselves.
-                if (gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), Direction.North)) {
-                    gc.moveRobot(unit.id(), Direction.North);
+                if (gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), Direction.Southeast)) {
+                    gc.moveRobot(unit.id(), Direction.Southeast);
                 }
             }
             // Submit the actions we've done, and wait for our next turn.
