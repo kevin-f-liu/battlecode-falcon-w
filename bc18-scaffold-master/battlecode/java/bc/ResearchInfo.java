@@ -45,7 +45,7 @@ public class ResearchInfo {
 
   public VecUnitType queue() {
     long cPtr = bcJNI.ResearchInfo_queue(swigCPtr, this);
-    return (cPtr == 0) ? null : new VecUnitType(cPtr, false);
+    return (cPtr == 0) ? null : new VecUnitType(cPtr, true);
   }
 
   public boolean hasNextInQueue() {

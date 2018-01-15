@@ -49,7 +49,7 @@ public class Location {
 
   public MapLocation mapLocation() {
     long cPtr = bcJNI.Location_mapLocation(swigCPtr, this);
-    return (cPtr == 0) ? null : new MapLocation(cPtr, false);
+    return (cPtr == 0) ? null : new MapLocation(cPtr, true);
   }
 
   public boolean isInGarrison() {
@@ -78,7 +78,7 @@ public class Location {
 
   public Location clone() {
     long cPtr = bcJNI.Location_clone(swigCPtr, this);
-    return (cPtr == 0) ? null : new Location(cPtr, false);
+    return (cPtr == 0) ? null : new Location(cPtr, true);
   }
 
   public boolean equals(Location other) {

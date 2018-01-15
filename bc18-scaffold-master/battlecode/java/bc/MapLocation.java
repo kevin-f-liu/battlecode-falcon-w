@@ -41,22 +41,22 @@ public class MapLocation {
 
   public MapLocation add(Direction direction) {
     long cPtr = bcJNI.MapLocation_add(swigCPtr, this, direction.swigValue());
-    return (cPtr == 0) ? null : new MapLocation(cPtr, false);
+    return (cPtr == 0) ? null : new MapLocation(cPtr, true);
   }
 
   public MapLocation subtract(Direction direction) {
     long cPtr = bcJNI.MapLocation_subtract(swigCPtr, this, direction.swigValue());
-    return (cPtr == 0) ? null : new MapLocation(cPtr, false);
+    return (cPtr == 0) ? null : new MapLocation(cPtr, true);
   }
 
   public MapLocation addMultiple(Direction direction, int multiple) {
     long cPtr = bcJNI.MapLocation_addMultiple(swigCPtr, this, direction.swigValue(), multiple);
-    return (cPtr == 0) ? null : new MapLocation(cPtr, false);
+    return (cPtr == 0) ? null : new MapLocation(cPtr, true);
   }
 
   public MapLocation translate(int dx, int dy) {
     long cPtr = bcJNI.MapLocation_translate(swigCPtr, this, dx, dy);
-    return (cPtr == 0) ? null : new MapLocation(cPtr, false);
+    return (cPtr == 0) ? null : new MapLocation(cPtr, true);
   }
 
   public long distanceSquaredTo(MapLocation o) {
@@ -81,7 +81,7 @@ public class MapLocation {
 
   public MapLocation clone() {
     long cPtr = bcJNI.MapLocation_clone(swigCPtr, this);
-    return (cPtr == 0) ? null : new MapLocation(cPtr, false);
+    return (cPtr == 0) ? null : new MapLocation(cPtr, true);
   }
 
   public boolean equals(MapLocation other) {

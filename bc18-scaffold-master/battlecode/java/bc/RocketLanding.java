@@ -41,7 +41,7 @@ public class RocketLanding {
 
   public RocketLanding clone() {
     long cPtr = bcJNI.RocketLanding_clone(swigCPtr, this);
-    return (cPtr == 0) ? null : new RocketLanding(cPtr, false);
+    return (cPtr == 0) ? null : new RocketLanding(cPtr, true);
   }
 
   public String toString() {

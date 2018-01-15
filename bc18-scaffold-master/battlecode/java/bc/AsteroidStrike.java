@@ -41,7 +41,7 @@ public class AsteroidStrike {
 
   public AsteroidStrike clone() {
     long cPtr = bcJNI.AsteroidStrike_clone(swigCPtr, this);
-    return (cPtr == 0) ? null : new AsteroidStrike(cPtr, false);
+    return (cPtr == 0) ? null : new AsteroidStrike(cPtr, true);
   }
 
   public String toString() {

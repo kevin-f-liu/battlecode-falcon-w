@@ -41,12 +41,12 @@ public class RocketLandingInfo {
 
   public VecRocketLanding landingsOn(long round) {
     long cPtr = bcJNI.RocketLandingInfo_landingsOn(swigCPtr, this, round);
-    return (cPtr == 0) ? null : new VecRocketLanding(cPtr, false);
+    return (cPtr == 0) ? null : new VecRocketLanding(cPtr, true);
   }
 
   public RocketLandingInfo clone() {
     long cPtr = bcJNI.RocketLandingInfo_clone(swigCPtr, this);
-    return (cPtr == 0) ? null : new RocketLandingInfo(cPtr, false);
+    return (cPtr == 0) ? null : new RocketLandingInfo(cPtr, true);
   }
 
   public String toString() {

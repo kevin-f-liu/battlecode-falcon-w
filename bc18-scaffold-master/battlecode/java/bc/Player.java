@@ -45,7 +45,7 @@ public class Player {
 
   public Player clone() {
     long cPtr = bcJNI.Player_clone(swigCPtr, this);
-    return (cPtr == 0) ? null : new Player(cPtr, false);
+    return (cPtr == 0) ? null : new Player(cPtr, true);
   }
 
   public boolean equals(Player other) {
