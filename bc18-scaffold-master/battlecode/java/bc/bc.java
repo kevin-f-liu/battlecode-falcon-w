@@ -168,6 +168,16 @@ public class bc {
     return (cPtr == 0) ? null : new ErrorMessage(cPtr, true);
   }
 
+  public static ReceivedMessaTurnMessage bcReceivedMessaTurnMessageFromJson(String s) {
+    long cPtr = bcJNI.bcReceivedMessaTurnMessageFromJson(s);
+    return (cPtr == 0) ? null : new ReceivedMessaTurnMessage(cPtr, true);
+  }
+
+  public static SentMessage bcSentMessageFromJson(String s) {
+    long cPtr = bcJNI.bcSentMessageFromJson(s);
+    return (cPtr == 0) ? null : new SentMessage(cPtr, true);
+  }
+
   public static AsteroidStrike bcAsteroidStrikeFromJson(String s) {
     long cPtr = bcJNI.bcAsteroidStrikeFromJson(s);
     return (cPtr == 0) ? null : new AsteroidStrike(cPtr, true);

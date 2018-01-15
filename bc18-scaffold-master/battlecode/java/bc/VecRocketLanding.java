@@ -45,7 +45,7 @@ public class VecRocketLanding {
 
   public VecRocketLanding clone() {
     long cPtr = bcJNI.VecRocketLanding_clone(swigCPtr, this);
-    return (cPtr == 0) ? null : new VecRocketLanding(cPtr, false);
+    return (cPtr == 0) ? null : new VecRocketLanding(cPtr, true);
   }
 
   public long size() {
@@ -54,7 +54,7 @@ public class VecRocketLanding {
 
   public RocketLanding get(long index) {
     long cPtr = bcJNI.VecRocketLanding_get(swigCPtr, this, index);
-    return (cPtr == 0) ? null : new RocketLanding(cPtr, false);
+    return (cPtr == 0) ? null : new RocketLanding(cPtr, true);
   }
 
 }

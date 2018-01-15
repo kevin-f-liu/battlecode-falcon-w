@@ -45,7 +45,7 @@ public class Unit {
 
   public Unit clone() {
     long cPtr = bcJNI.Unit_clone(swigCPtr, this);
-    return (cPtr == 0) ? null : new Unit(cPtr, false);
+    return (cPtr == 0) ? null : new Unit(cPtr, true);
   }
 
   public String toJson() {
@@ -74,7 +74,7 @@ public class Unit {
 
   public Location location() {
     long cPtr = bcJNI.Unit_location(swigCPtr, this);
-    return (cPtr == 0) ? null : new Location(cPtr, false);
+    return (cPtr == 0) ? null : new Location(cPtr, true);
   }
 
   public long health() {
@@ -163,7 +163,7 @@ public class Unit {
 
   public MapLocation rangerTargetLocation() {
     long cPtr = bcJNI.Unit_rangerTargetLocation(swigCPtr, this);
-    return (cPtr == 0) ? null : new MapLocation(cPtr, false);
+    return (cPtr == 0) ? null : new MapLocation(cPtr, true);
   }
 
   public long rangerCountdown() {
@@ -184,7 +184,7 @@ public class Unit {
 
   public VecUnitID structureGarrison() {
     long cPtr = bcJNI.Unit_structureGarrison(swigCPtr, this);
-    return (cPtr == 0) ? null : new VecUnitID(cPtr, false);
+    return (cPtr == 0) ? null : new VecUnitID(cPtr, true);
   }
 
   public short isFactoryProducing() {

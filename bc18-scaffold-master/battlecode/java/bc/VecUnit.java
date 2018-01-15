@@ -45,7 +45,7 @@ public class VecUnit {
 
   public VecUnit clone() {
     long cPtr = bcJNI.VecUnit_clone(swigCPtr, this);
-    return (cPtr == 0) ? null : new VecUnit(cPtr, false);
+    return (cPtr == 0) ? null : new VecUnit(cPtr, true);
   }
 
   public long size() {
@@ -54,7 +54,7 @@ public class VecUnit {
 
   public Unit get(long index) {
     long cPtr = bcJNI.VecUnit_get(swigCPtr, this, index);
-    return (cPtr == 0) ? null : new Unit(cPtr, false);
+    return (cPtr == 0) ? null : new Unit(cPtr, true);
   }
 
 }

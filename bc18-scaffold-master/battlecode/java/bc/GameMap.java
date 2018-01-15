@@ -45,7 +45,7 @@ public class GameMap {
 
   public GameMap clone() {
     long cPtr = bcJNI.GameMap_clone(swigCPtr, this);
-    return (cPtr == 0) ? null : new GameMap(cPtr, false);
+    return (cPtr == 0) ? null : new GameMap(cPtr, true);
   }
 
   public String toJson() {

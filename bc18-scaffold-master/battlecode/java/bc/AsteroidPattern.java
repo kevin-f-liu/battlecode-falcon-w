@@ -49,12 +49,12 @@ public class AsteroidPattern {
 
   public AsteroidStrike asteroid(long round) {
     long cPtr = bcJNI.AsteroidPattern_asteroid(swigCPtr, this, round);
-    return (cPtr == 0) ? null : new AsteroidStrike(cPtr, false);
+    return (cPtr == 0) ? null : new AsteroidStrike(cPtr, true);
   }
 
   public AsteroidPattern clone() {
     long cPtr = bcJNI.AsteroidPattern_clone(swigCPtr, this);
-    return (cPtr == 0) ? null : new AsteroidPattern(cPtr, false);
+    return (cPtr == 0) ? null : new AsteroidPattern(cPtr, true);
   }
 
   public String toString() {

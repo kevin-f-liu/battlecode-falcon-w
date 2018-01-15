@@ -57,7 +57,7 @@ public class PlanetMap {
 
   public PlanetMap clone() {
     long cPtr = bcJNI.PlanetMap_clone(swigCPtr, this);
-    return (cPtr == 0) ? null : new PlanetMap(cPtr, false);
+    return (cPtr == 0) ? null : new PlanetMap(cPtr, true);
   }
 
   public String toJson() {

@@ -43,6 +43,14 @@ public class StartTurnMessage {
     return bcJNI.StartTurnMessage_toJson(swigCPtr, this);
   }
 
+  public void setTime_left_ms(int value) {
+    bcJNI.StartTurnMessage_time_left_ms_set(swigCPtr, this, value);
+  }
+
+  public int getTime_left_ms() {
+    return bcJNI.StartTurnMessage_time_left_ms_get(swigCPtr, this);
+  }
+
   public void setRound(long value) {
     bcJNI.StartTurnMessage_round_set(swigCPtr, this, value);
   }

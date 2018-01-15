@@ -45,7 +45,7 @@ public class VecMapLocation {
 
   public VecMapLocation clone() {
     long cPtr = bcJNI.VecMapLocation_clone(swigCPtr, this);
-    return (cPtr == 0) ? null : new VecMapLocation(cPtr, false);
+    return (cPtr == 0) ? null : new VecMapLocation(cPtr, true);
   }
 
   public long size() {
@@ -54,7 +54,7 @@ public class VecMapLocation {
 
   public MapLocation get(long index) {
     long cPtr = bcJNI.VecMapLocation_get(swigCPtr, this, index);
-    return (cPtr == 0) ? null : new MapLocation(cPtr, false);
+    return (cPtr == 0) ? null : new MapLocation(cPtr, true);
   }
 
 }

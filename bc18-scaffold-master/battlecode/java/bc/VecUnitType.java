@@ -45,7 +45,7 @@ public class VecUnitType {
 
   public VecUnitType clone() {
     long cPtr = bcJNI.VecUnitType_clone(swigCPtr, this);
-    return (cPtr == 0) ? null : new VecUnitType(cPtr, false);
+    return (cPtr == 0) ? null : new VecUnitType(cPtr, true);
   }
 
   public long size() {

@@ -45,7 +45,7 @@ public class Veci32 {
 
   public Veci32 clone() {
     long cPtr = bcJNI.Veci32_clone(swigCPtr, this);
-    return (cPtr == 0) ? null : new Veci32(cPtr, false);
+    return (cPtr == 0) ? null : new Veci32(cPtr, true);
   }
 
   public long size() {
