@@ -28,6 +28,10 @@ public class PathFinder {
 		public void setFCost() {
 			this.fCost = this.gCost + this.hCost;
 		}
+		
+		public String toString() {
+			return "(" + this.x + ", " + this.y + ")";
+		}
 	}
 	
 	public Node[][] map;
@@ -65,7 +69,7 @@ public class PathFinder {
 		
 		for (int i = y - 1; i <= y + 1; i ++) {
 			for (int j = x - 1; j <= x + 1; j ++) {
-				if (j != x && i != y) {
+				if (j != x || i != y) {
 					if (j >= 0 && i >= 0 && i < this.height && j < this.width && this.map[i][j].isWalkable()) {
 						neighbours.add(this.map[i][j]);
 					}
@@ -88,19 +92,31 @@ public class PathFinder {
 	}
 	
 	private void createPath(Node startNode, Node endNode) {
+		this.path = new ArrayList<Node>();
 		Node current = endNode;
 		this.path.add(current);
-		while (current != startNode) {
+		while (current.x != startNode.x && current.y != startNode.y) {
 			current.parentNode.nextNode = current;
 			current = current.parentNode;
 			this.path.add(0, current);
 		}
 	}
 	
-	public void calculatePath(Node startNode, Node endNode) {
+	public ArrayList<int[]> getPath() {
+		// Debugging method that gets just the coordinates
+		ArrayList<int[]> ret = new ArrayList<int[]>();
+		for (Node n : this.path) {
+			ret.add(new int[] {n.x, n.y});
+		}
+		return ret;
+	}
+	
+	public void calculatePath(int startx, int starty, int endx, int endy) {
+		Node startNode = new Node(startx, starty, '0');
+		Node endNode = new Node(endx, endy, '0');
 		Node currentNode = startNode;
 		currentNode.gCost = 0;
-		currentNode.hCost = this.getHDistance(startNode, endNode);
+		currentNode.hCost = this.getHDistance(currentNode, endNode);
 		this.openSet.add(currentNode);
 		
 		while (!this.openSet.isEmpty()) {
@@ -115,12 +131,6 @@ public class PathFinder {
 				}	
 			}
 			currentNode = bestNode;
-			
-			// If Current is at the end, that's it.
-			if (currentNode == endNode) {
-				this.createPath(startNode, endNode);
-				break;
-			}
 			
 			// Move to it and add to closedSet
 			this.openSet.remove(bestNode);
@@ -142,7 +152,13 @@ public class PathFinder {
 					n.setFCost();
 				}
 			}
+			
+			// If Current is at the end, that's it.
+			if (currentNode.x == endNode.x && currentNode.y == endNode.y) {
+				System.out.println("FOUND END");
+				this.createPath(startNode, currentNode);
+				break;
+			}
 		}
-		
 	}
 }
