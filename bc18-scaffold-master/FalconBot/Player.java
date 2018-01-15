@@ -7,15 +7,16 @@ public class Player {
 		PlanetMap m = gc.startingMap(p);
 		long width = m.getWidth();
 		long height = m.getHeight();
+		System.out.println(m.toJson());
 		char[][] map = new char[(int) height][(int) width];
 		for (int i = 0; i < (int) height; i++) {
 			for (int j = 0; j < (int) width; j++) {
-				map[i][j] = m.isPassableTerrainAt(new MapLocation(gc.planet(), j, i)) == 1 ? '0' : '1';
+				map[i][j] = '0';
 			}
 		}
 		return map;
 	}
-
+	
 	public static void main(String[] args) {
         // Connect to the manager, starting the game
         GameController gc = new GameController();
