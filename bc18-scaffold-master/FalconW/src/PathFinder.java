@@ -1,5 +1,7 @@
 import java.util.ArrayList;
 
+import bc.Direction;
+
 // Implement A* pathfinding algorithm
 public class PathFinder {
 	// Node class to facilitate pathing
@@ -37,6 +39,10 @@ public class PathFinder {
 	public Node[][] map;
 	public int height;
 	public int width;
+	public int startx;
+	public int starty;
+	public int endx;
+	public int endy;
 	private ArrayList<Node> closedSet;
 	private ArrayList<Node> openSet;
 	public ArrayList<Node> path;
@@ -82,16 +88,61 @@ public class PathFinder {
 	
 	public void recalculate(char[][] newMap) {
 		// Heuristic to slightly modify path, to avoid recalculating everything
+		// Currently just clears current state and reprocesses a path
+		this.openSet = new ArrayList<Node>();
+		this.closedSet = new ArrayList<Node>();
+		this.path = new ArrayList<Node>();
+		createNodeMap(newMap);
+		calculatePath(this.startx, this.starty, this.endx, this.endy);
+		
 	}
 	
-	public int[] advanceStep() {
-		// Also returns the coordinates of the next move
+	public Direction advanceStep() {
+		// Also returns the direction of the next move
+		Node prev = new Node(this.current.x, this.current.y, this.current.content);
+		if (this.current.nextNode == null) {
+			throw new RuntimeException("Reached end of path");
+		}
 		this.current = this.current.nextNode;
-		int[] ret = {this.current.x, this.current.y};
+		
+		Direction ret = null;
+		// NOTE: This part is confusing because of the way BattleCode describes the arrays. 
+		// (0, 0) is the bottom left in terms of playing, however, the map that is queried is returned with (0, 0) being
+		// the top left. Therefore to translate the internal map to the actual map, we need to reverse the north south directions.
+		if (this.current.y < prev.y) {
+			// North
+			ret = Direction.North;
+			if (this.current.x > prev.x) {
+				// Northeast
+				ret = Direction.Northeast;
+			} else if (this.current.x < prev.x) {
+				// Northwest
+				ret = Direction.Northwest;
+			}
+		} else if (this.current.y > prev.y) {
+			// South
+			ret = Direction.South;
+			if (this.current.x > prev.x) {
+				// Southeast
+				ret = Direction.Southeast;
+			} else if (this.current.x < prev.x) {
+				// Southwest
+				ret = Direction.Southwest;
+			}
+		} else if (this.current.x > prev.x) {
+			// East
+			ret = Direction.East;
+		} else if (this.current.x < prev.x) {
+			// West
+			ret = Direction.West;
+		} else {
+			ret = Direction.Center;
+		}
 		return ret;
 	}
 	
 	private void createPath(Node startNode, Node endNode) {
+		// Fills the path list and links all elements together
 		this.path = new ArrayList<Node>();
 		Node current = endNode;
 		this.path.add(current);
@@ -100,6 +151,7 @@ public class PathFinder {
 			current = current.parentNode;
 			this.path.add(0, current);
 		}
+		this.current = this.path.get(0);
 	}
 	
 	public ArrayList<int[]> getPath() {
@@ -112,6 +164,11 @@ public class PathFinder {
 	}
 	
 	public void calculatePath(int startx, int starty, int endx, int endy) {
+		this.startx = startx;
+		this.starty = starty;
+		this.endx = endx;
+		this.endy = endy;
+		
 		Node startNode = new Node(startx, starty, '0');
 		Node endNode = new Node(endx, endy, '0');
 		Node currentNode = startNode;

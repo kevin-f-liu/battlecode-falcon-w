@@ -49,7 +49,7 @@ public class Tester {
 		
 		for (int i = 0; i < height; i++) {
 			for (int j = 0; j < width; j++) {
-				map[height - 1 - i][j] = m[i][j] ? '0' : '1';
+				map[i][j] = m[i][j] ? '0' : '1';
 			}
 		}
 		
@@ -63,5 +63,16 @@ public class Tester {
 		}
 		
 		printArray(map);
+		
+		boolean running = true;
+		while (running) {
+			try {
+				System.out.println(pf.advanceStep());
+			} catch (RuntimeException e) {
+				System.out.println(e.getMessage());
+				running  = false;
+			}
+			
+		}
 	}
 }

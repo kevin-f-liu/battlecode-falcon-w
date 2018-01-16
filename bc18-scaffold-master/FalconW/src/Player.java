@@ -21,23 +21,11 @@ public class Player {
         GameController gc = new GameController();
         // Fetch the map of the current planet and store it in an array
  		char[][] currentMap = fetchMapData(gc.planet(), gc);
- 		
-        // Direction is a normal java enum.
-        Direction[] directions = Direction.values();
 
         while (true) {
             System.out.println("Current round: "+gc.round());
-
-            // VecUnit is a class that you can think of as similar to ArrayList<Unit>, but immutable.
-            VecUnit units = gc.myUnits();
-            for (int i = 0; i < units.size(); i++) {
-                Unit unit = units.get(i);
-
-                // Most methods on gc take unit IDs, instead of the unit objects themselves.
-                if (gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), Direction.North)) {
-                    gc.moveRobot(unit.id(), Direction.North);
-                }
-            }
+            
+            
             
             // foo() => Get data
             // foo2() => Workers move
