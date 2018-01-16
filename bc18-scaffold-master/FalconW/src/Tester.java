@@ -56,7 +56,7 @@ public class Tester {
 		printArray(map);
 		
 		PathFinder pf = new PathFinder(map, height, width);
-		pf.calculatePath(0, 0, 28, 28);
+		pf.calculatePath(29, 29, 0, 0);
 		ArrayList<int[]> path = pf.getPath();
 		for (int[] node : path) {
 			map[node[1]][node[0]] = 'x';
