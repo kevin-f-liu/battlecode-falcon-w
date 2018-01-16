@@ -39,6 +39,21 @@ public class Player {
                     gc.moveRobot(unit.id(), Direction.North);
                 }
             }
+            
+            // foo() => Get data
+            // foo2() => Workers move
+            // foo3() => Workers Action
+            // foo4() => 
+            // foo4() => Rangers Move
+            // foo5() => Rangers Action
+            // 
+            // endturn()
+            
+            
+            
+            
+            
+            
             // Submit the actions we've done, and wait for our next turn.
             gc.nextTurn();
         }
