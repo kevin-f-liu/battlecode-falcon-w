@@ -142,7 +142,7 @@ public class PathFinder {
 		// NOTE: This part is confusing because of the way BattleCode describes the arrays. 
 		// (0, 0) is the bottom left in terms of playing, however, the map that is queried is returned with (0, 0) being
 		// the top left. Therefore to translate the internal map to the actual map, we need to reverse the north south directions.
-		if (this.current.y < prev.y) {
+		if (this.current.y > prev.y) {
 			// North
 			ret = Direction.North;
 			if (this.current.x > prev.x) {
@@ -152,7 +152,7 @@ public class PathFinder {
 				// Northwest
 				ret = Direction.Northwest;
 			}
-		} else if (this.current.y > prev.y) {
+		} else if (this.current.y < prev.y) {
 			// South
 			ret = Direction.South;
 			if (this.current.x > prev.x) {
