@@ -3,6 +3,9 @@ import java.util.Arrays;
 import bc.*;
 
 public class Player {	
+	
+	private static Team ENEMY_TEAM;
+	
 	public static char[][] fetchMapData(Planet p, GameController gc) {
 		PlanetMap m = gc.startingMap(p);
 		long width = m.getWidth();
@@ -24,6 +27,14 @@ public class Player {
  		
         // Direction is a normal java enum.
         Direction[] directions = Direction.values();
+        
+        Team myTeam = gc.myUnits().get(1).team();
+		
+		if (myTeam == Team.Blue){
+			ENEMY_TEAM = Team.Red;
+		} else{
+			ENEMY_TEAM = Team.Blue;
+		}
 
         while (true) {
             System.out.println("Current round: "+gc.round());
@@ -33,7 +44,7 @@ public class Player {
             
             for (int i = 0; i < units.size(); i++) {
                 Unit unit = units.get(i);
-
+              
                 // Most methods on gc take unit IDs, instead of the unit objects themselves.
                 if (gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), Direction.North)) {
                     gc.moveRobot(unit.id(), Direction.North);
@@ -48,12 +59,7 @@ public class Player {
             // foo5() => Rangers Action
             // 
             // endturn()
-            
-            
-            
-            
-            
-            
+      
             // Submit the actions we've done, and wait for our next turn.
             gc.nextTurn();
         }

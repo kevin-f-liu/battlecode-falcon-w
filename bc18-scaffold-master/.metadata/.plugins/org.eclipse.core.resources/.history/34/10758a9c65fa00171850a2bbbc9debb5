@@ -1,0 +1,39 @@
+import bc.*;
+public class EnemyLocations {
+
+	private static Team ENEMY_TEAM;
+	
+	public EnemyLocations(GameController gc){
+		Team myTeam = gc.myUnits().get(1).team();
+		
+		if (myTeam == Team.Blue){
+			ENEMY_TEAM = Team.Red;
+		} else{
+			ENEMY_TEAM = Team.Blue;
+		}
+		
+		VecUnit enemyUnits = gc.senseNearbyUnitsByTeam(unitLoc, Integer.MAX_VALUE, enemyTeam);
+	}
+	
+	public void getEnemyLocations(VecUnit units, GameController gc){
+		Team enemyTeam = gc.team();
+		
+		for (int i = 0; i < units.size(); i++){
+			Unit unit = units.get(i);
+			MapLocation unitLoc = unit.location().mapLocation();
+			gc.units();
+			VecUnit enemyUnits = gc.senseNearbyUnitsByTeam(unitLoc, Integer.MAX_VALUE, enemyTeam);
+			//within attack range, within one move of our units
+		}
+	}
+	
+	public Unit isWithinAttackRange(Unit unit){
+		
+		
+		
+		
+		return null;	
+	}
+	
+	
+}

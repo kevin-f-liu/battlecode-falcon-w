@@ -1,0 +1,67 @@
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+
+import bc.*;
+public class EnemyLocations {
+
+	private PlayerUnits enemies;
+	private static Team ENEMY_TEAM;
+	
+	public EnemyLocations(GameController gc, Team enemyTeam){
+		
+		MapLocation loc = new MapLocation(gc.planet(), 0, 0);
+		ENEMY_TEAM = enemyTeam;
+		VecUnit enemyUnits = gc.senseNearbyUnitsByTeam(loc, Integer.MAX_VALUE, enemyTeam);
+		enemies = new PlayerUnits(enemyUnits);
+		
+	}
+	
+	public void updateEnemyLocations(GameController gc){
+		MapLocation loc = new MapLocation(gc.planet(), 0, 0);
+		VecUnit enemyUnits = gc.senseNearbyUnitsByTeam(loc, Integer.MAX_VALUE, ENEMY_TEAM);
+		enemies.checkNewUnits(enemyUnits);
+	}
+	
+	
+	//within attack range, within one move of our units
+	public Unit isWithinAttackRange(Unit unit){
+		HashMap<Integer, Unit> enemyUnits = enemies.getAllUnits();
+		for (int key: enemyUnits.keySet()){
+			if(enemyUnits.get(key));
+		}
+		System.out.println("Unit: " + unit.id() + " within enemy attack range!");
+		return null;	
+	}
+	
+	public ArrayList<Unit> canAttack(GameController gc, Unit unit){
+		ArrayList<Unit> attackable = new ArrayList<Unit>();
+		if (unit.unitType() == UnitType.Knight){
+			VecUnit surroundingEnemyUnits = gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), 1, ENEMY_TEAM);
+			for (int i = 0; i < surroundingEnemyUnits.size(); i++){
+				attackable.add(surroundingEnemyUnits.get(i));
+			}
+			
+		} else if (unit.unitType() == UnitType.Mage){
+			VecUnit surroundingEnemyUnits = gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), 30, ENEMY_TEAM);
+			for (int i = 0; i < surroundingEnemyUnits.size(); i++){
+				attackable.add(surroundingEnemyUnits.get(i));
+			}
+		} else if (unit.unitType() == UnitType.Ranger){
+			VecUnit surroundingEnemyUnits = gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), 50, ENEMY_TEAM);
+			VecUnit unitsTooClose = gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), 10, ENEMY_TEAM);
+			ArrayList<Unit> tooClose = new ArrayList<Unit>();
+			for (int i = 0; i < unitsTooClose.size(); i++){
+				tooClose.add(unitsTooClose.get(i));
+			}
+			for (int i = 0; i < surroundingEnemyUnits.size(); i++){
+				Unit current = surroundingEnemyUnits.get(i);
+				if (tooClose.contains(current) == false){
+					attackable.add(current);
+				}
+			}
+		}	
+		return attackable;
+	}
+	
+}

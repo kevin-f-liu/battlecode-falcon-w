@@ -1,0 +1,33 @@
+import bc.*;
+public class EnemyLocations {
+
+	private PlayerUnits enemies;
+	private static Team ENEMY_TEAM;
+	
+	public EnemyLocations(GameController gc, Team enemyTeam){
+		
+		MapLocation loc = new MapLocation(gc.planet(), 0, 0);
+		ENEMY_TEAM = enemyTeam;
+		VecUnit enemyUnits = gc.senseNearbyUnitsByTeam(loc, Integer.MAX_VALUE, enemyTeam);
+		enemies = new PlayerUnits(enemyUnits);
+		
+	}
+	
+	public void updateEnemyLocations(GameController gc){
+		MapLocation loc = new MapLocation(gc.planet(), 0, 0);
+		VecUnit enemyUnits = gc.senseNearbyUnitsByTeam(loc, Integer.MAX_VALUE, ENEMY_TEAM);
+		enemies.checkNewUnits(enemyUnits);
+	}
+	
+	
+	//within attack range, within one move of our units
+	public Unit isWithinAttackRange(Unit unit){
+		
+		
+		
+		
+		return null;	
+	}
+	
+	
+}

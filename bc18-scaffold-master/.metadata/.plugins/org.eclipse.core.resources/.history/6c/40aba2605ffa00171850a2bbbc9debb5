@@ -1,0 +1,22 @@
+import bc.*;
+public class EnemyLocations {
+
+	
+	public EnemyLocations(){
+		const ENEMY_TEAM = r;
+	}
+	
+	public void getEnemyLocations(VecUnit units, GameController gc){
+		Team enemyTeam = gc.team();
+		for (int i = 0; i < units.size(); i++){
+			Unit unit = units.get(i);
+			Location unitLoc = unit.location();
+			
+			gc.senseNearbyUnitsByTeam(unitLoc, Integer.MAX_VALUE, enemyTeam);
+			
+		}
+	}
+	
+	
+	
+}
