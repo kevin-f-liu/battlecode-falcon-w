@@ -47,7 +47,7 @@ public class PathFinder {
 	private ArrayList<Node> closedSet;
 	private ArrayList<Node> openSet;
 	public ArrayList<Node> path;
-	private Node current;
+	public Node current;
 	
 	public PathFinder(char[][] map) {
 		this.height = map.length;
@@ -99,13 +99,13 @@ public class PathFinder {
 		calculatePath(this.current.x, this.current.y, this.endx, this.endy);
 	}
 	
-	public void target(int startx, int staty, int endx, int endy) {
+	public void target(int startx, int starty, int endx, int endy) {
 		// Basic call
 		this.targeting = true;
 		if (this.map == null) {
 			throw (new RuntimeException("You need to init a map first"));
 		}
-		calculatePath(startx, startx, endx, endy);
+		calculatePath(startx, starty, endx, endy);
 	}
 	
 	public void retarget(int x, int y) {
@@ -124,51 +124,63 @@ public class PathFinder {
 		return this.targeting;
 	}
 	
-	public Direction advanceStep() {
+	public void advanceStep() {
+		if (this.current == null) {
+			throw (new RuntimeException("You must calculate a path first"));
+		}
+		if (this.current.nextNode == null) {
+			// Done pathing
+			this.targeting = false;
+		}
+		this.current = this.current.nextNode;
+	}
+	
+	public Direction nextStep() {
 		// Returns the direction that should be moved to follow the path
 		if (this.current == null) {
 			throw (new RuntimeException("You must calculate a path first"));
 		}
 		
-		Node prev = new Node(this.current.x, this.current.y, this.current.content);
 		if (this.current.nextNode == null) {
 			// Done pathing
 			this.targeting = false;
 			return null;
 		}
-		this.current = this.current.nextNode;
+		
+		Node next = this.current.nextNode;
 		
 		Direction ret = null;
 		// NOTE: This part is confusing because of the way BattleCode describes the arrays. 
 		// (0, 0) is the bottom left in terms of playing, however, the map that is queried is returned with (0, 0) being
 		// the top left. Therefore to translate the internal map to the actual map, we need to reverse the north south directions.
-		if (this.current.y > prev.y) {
+		if (this.current.y < next.y) {
 			// North
 			ret = Direction.North;
-			if (this.current.x > prev.x) {
+			if (this.current.x < next.x) {
 				// Northeast
 				ret = Direction.Northeast;
-			} else if (this.current.x < prev.x) {
+			} else if (this.current.x > next.x) {
 				// Northwest
 				ret = Direction.Northwest;
 			}
-		} else if (this.current.y < prev.y) {
+		} else if (this.current.y > next.y) {
 			// South
 			ret = Direction.South;
-			if (this.current.x > prev.x) {
+			if (this.current.x < next.x) {
 				// Southeast
 				ret = Direction.Southeast;
-			} else if (this.current.x < prev.x) {
+			} else if (this.current.x > next.x) {
 				// Southwest
 				ret = Direction.Southwest;
 			}
-		} else if (this.current.x > prev.x) {
+		} else if (this.current.x < next.x) {
 			// East
 			ret = Direction.East;
-		} else if (this.current.x < prev.x) {
+		} else if (this.current.x > next.x) {
 			// West
 			ret = Direction.West;
 		} else {
+			// This should never happen
 			ret = Direction.Center;
 		}
 		return ret;
@@ -179,7 +191,7 @@ public class PathFinder {
 		this.path = new ArrayList<Node>();
 		Node current = endNode;
 		this.path.add(current);
-		while (current.x != startNode.x && current.y != startNode.y) {
+		while (current.x != startNode.x || current.y != startNode.y) {
 			current.parentNode.nextNode = current;
 			current = current.parentNode;
 			this.path.add(0, current);

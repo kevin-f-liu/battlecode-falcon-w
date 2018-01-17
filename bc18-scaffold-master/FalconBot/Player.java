@@ -68,6 +68,9 @@ public class Player {
         GameController gc = new GameController();
         // Fetch the map of the current planet and store it in an array
  		char[][] currentMap = fetchMapData(gc.planet(), gc);
+ 		for (char[] a : currentMap) {
+ 			System.out.println(a);
+ 		}
  		
  		HashMap<Integer, PathFinder> pathFinders = new HashMap<Integer, PathFinder>();
 
@@ -94,30 +97,41 @@ public class Player {
             			pf = pathFinders.get(new Integer(unit.id()));
             		}
             		
-            		// See if the worker is standing on karbonite, if it is, mine it
-            		boolean mining = false;
-            		if (gc.karboniteAt(unitMapLocation) > 0) {
-            			System.out.println(unit.id() + ": Mining karbonite");
-            			mining = true;
-            			gc.harvest(unit.id(), Direction.Center);
-            		}
+            		pf.target(unitCoord[0], unitCoord[1], 0, 0);
+
+            		Direction next = pf.nextStep();
+        			System.out.println(unit.id() + ": move direction " + next);
+        			System.out.println(unit.id() + ": " + next + " | " + gc.isMoveReady(unit.id()) + " | " + gc.canMove(unit.id(), next));
+        			if (next != null && gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), next)) {
+        				gc.moveRobot(unit.id(), next);
+        				pf.advanceStep();
+            			System.out.println(unit.id() + ": moved to " + unit.location().mapLocation());
+        			}
             		
-            		// Find the nearest target if not mining
-            		if (!mining) {
-            			if (!pf.isTargeting()) {
-                			MapLocation target = breadthFirstSearchMap(gc, currentMap, 'b', unitCoord[0], unitCoord[1]);
-                			System.out.println(unit.id() + ": new target: " + target);
-                			pf.target(unitCoord[0], unitCoord[1], target.getX(), target.getY());
-                		}
-            			
-            			// Move the unit if it didn't mine, either new target or old
-            			Direction next = pf.advanceStep();
-            			System.out.println(unit.id() + ": move direction " + next);
-            			if (next != null && gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), next)) {
-            				gc.moveRobot(unit.id(), next);
-                			System.out.println(unit.id() + ": moved to " + unit.location().mapLocation());
-            			}
-            		}
+//            		// See if the worker is standing on karbonite, if it is, mine it
+//            		boolean mining = false;
+//            		if (gc.karboniteAt(unitMapLocation) > 0) {
+//            			System.out.println(unit.id() + ": Mining karbonite");
+//            			mining = true;
+//            			gc.harvest(unit.id(), Direction.Center);
+//            		}
+//            		
+//            		// Find the nearest target if not mining
+//            		if (!mining) {
+//            			if (!pf.isTargeting()) {
+//                			MapLocation target = breadthFirstSearchMap(gc, currentMap, 'b', unitCoord[0], unitCoord[1]);
+//                			System.out.println(unit.id() + ": new target: " + target);
+//                			pf.target(unitCoord[0], unitCoord[1], target.getX(), target.getY());
+//                		}
+//            			
+//            			// Move the unit if it didn't mine, either new target or old
+//            			Direction next = pf.advanceStep();
+//            			System.out.println(unit.id() + ": move direction " + next);
+//            			if (next != null && gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), next)) {
+//            				gc.moveRobot(unit.id(), next);
+//                			System.out.println(unit.id() + ": moved to " + unit.location().mapLocation());
+//            			}
+//            		}
             	}
             	
             	

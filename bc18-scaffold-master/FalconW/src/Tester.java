@@ -56,7 +56,7 @@ public class Tester {
 		printArray(map);
 		
 		PathFinder pf = new PathFinder(map);
-		pf.calculatePath(29, 29, 0, 0);
+		pf.target(29, 0, 0, 0);
 		ArrayList<int[]> path = pf.getPath();
 		for (int[] node : path) {
 			map[node[1]][node[0]] = 'x';
@@ -67,7 +67,9 @@ public class Tester {
 		boolean running = true;
 		while (running) {
 			try {
-				System.out.println(pf.advanceStep());
+				System.out.println(pf.current);
+				System.out.println(pf.nextStep());
+				pf.advanceStep();
 			} catch (RuntimeException e) {
 				System.out.println(e.getMessage());
 				running  = false;
