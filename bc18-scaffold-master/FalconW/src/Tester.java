@@ -49,19 +49,32 @@ public class Tester {
 		
 		for (int i = 0; i < height; i++) {
 			for (int j = 0; j < width; j++) {
-				map[height - 1 - i][j] = m[i][j] ? '0' : '1';
+				map[i][j] = m[i][j] ? '0' : '1';
 			}
 		}
 		
 		printArray(map);
 		
-		PathFinder pf = new PathFinder(map, height, width);
-		pf.calculatePath(29, 29, 0, 0);
+		PathFinder pf = new PathFinder(map);
+		pf.target(29, 0, 0, 0);
 		ArrayList<int[]> path = pf.getPath();
 		for (int[] node : path) {
 			map[node[1]][node[0]] = 'x';
 		}
 		
 		printArray(map);
+		
+		boolean running = true;
+		while (running) {
+			try {
+				System.out.println(pf.current);
+				System.out.println(pf.nextStep());
+				pf.advanceStep();
+			} catch (RuntimeException e) {
+				System.out.println(e.getMessage());
+				running  = false;
+			}
+			
+		}
 	}
 }
