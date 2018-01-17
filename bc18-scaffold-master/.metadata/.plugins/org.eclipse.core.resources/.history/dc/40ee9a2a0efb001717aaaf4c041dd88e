@@ -4,7 +4,7 @@ import bc.*;
 
 public class PlayerUnits {
 
-	private HashMap<Integer, Unit> allUnits, workers, knights, rangers, mages, healers, factories, rockets;
+	private HashMap<Integer, Unit> allUnits, workers, knights, rangers, mages, healers, factories, rockets, combatUnits;
 
 	public PlayerUnits(VecUnit units) {
 		allUnits = new HashMap<Integer, Unit>();
@@ -15,6 +15,7 @@ public class PlayerUnits {
 		healers = new HashMap<Integer, Unit>();
 		factories = new HashMap<Integer, Unit>();
 		rockets = new HashMap<Integer, Unit>();
+		combatUnits = new HashMap<Integer, Unit>();
 
 		for (int i = 0; i < units.size(); i++) {
 			Unit unit = units.get(i);
@@ -24,6 +25,7 @@ public class PlayerUnits {
 
 			} else if (unit.unitType() == UnitType.Knight) {
 				knights.put(unit.id(), unit);
+				combatUnits.put(unit.id(), unit);
 
 			} else if (unit.unitType() == UnitType.Ranger) {
 				rangers.put(unit.id(), unit);

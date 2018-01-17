@@ -65,10 +65,7 @@ public class EnemyLocations {
 	 * @return
 	 */
 	public ArrayList<Unit> canAttack(GameController gc, Unit unit){
-		
 		ArrayList<Unit> attackable = new ArrayList<Unit>();
-		
-		// Account for attack heat here. 
 		if (unit.unitType() == UnitType.Knight){
 			VecUnit surroundingEnemyUnits = gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), 1, ENEMY_TEAM);
 			for (int i = 0; i < surroundingEnemyUnits.size(); i++){
@@ -94,14 +91,6 @@ public class EnemyLocations {
 				}
 			}
 		}	
-		
-		
-		
-		
 		return attackable;
-	}
-	
-	public PlayerUnits getEnemyUnits(){
-		return this.enemies;
 	}
 }

@@ -100,8 +100,4 @@ public class EnemyLocations {
 		
 		return attackable;
 	}
-	
-	public PlayerUnits getEnemyUnits(){
-		return this.enemies;
-	}
 }
