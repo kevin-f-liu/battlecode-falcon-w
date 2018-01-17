@@ -82,7 +82,6 @@ public class Player {
             for (int i = 0; i < myUnits.size(); i++) {
             	Unit unit = myUnits.get(i);
             	MapLocation unitMapLocation = unit.location().mapLocation();
-            	System.out.println(unit.id() + ": " + unitMapLocation);
             	int[] unitCoord = new int[] {unitMapLocation.getX(), unitMapLocation.getY()};
             	if (unit.unitType() == UnitType.Worker) {
             		// Get the worker's pathfinder
@@ -93,45 +92,40 @@ public class Player {
             			pf = new PathFinder(currentMap);
             			pathFinders.put(new Integer(unit.id()), pf);
             		} else {
-            			System.out.println(unit.id() + ": old pathfinder");
             			pf = pathFinders.get(new Integer(unit.id()));
             		}
             		
-            		pf.target(unitCoord[0], unitCoord[1], 0, 0);
-
-            		Direction next = pf.nextStep();
-        			System.out.println(unit.id() + ": move direction " + next);
-        			System.out.println(unit.id() + ": " + next + " | " + gc.isMoveReady(unit.id()) + " | " + gc.canMove(unit.id(), next));
-        			if (next != null && gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), next)) {
-        				gc.moveRobot(unit.id(), next);
-        				pf.advanceStep();
-            			System.out.println(unit.id() + ": moved to " + unit.location().mapLocation());
-        			}
-            		
-//            		// See if the worker is standing on karbonite, if it is, mine it
-//            		boolean mining = false;
-//            		if (gc.karboniteAt(unitMapLocation) > 0) {
-//            			System.out.println(unit.id() + ": Mining karbonite");
-//            			mining = true;
-//            			gc.harvest(unit.id(), Direction.Center);
-//            		}
+            		// See if the worker is standing on karbonite, if it is, mine it
+            		boolean mining = false;
+            		if (gc.karboniteAt(unitMapLocation) > 0) {
+            			System.out.println(unit.id() + ": Mining karbonite | " + gc.karboniteAt(unitMapLocation));
+            			mining = true;
+            			gc.harvest(unit.id(), Direction.Center);
+            		} else {
+            			if (currentMap[unitCoord[0]][unitCoord[1]] == 'b') {
+            				System.out.println("Ran out of karbonite at " + unitMapLocation);
+            				currentMap[unitCoord[0]][unitCoord[1]] = '0';
+            			}
+            		}
 //            		
-//            		// Find the nearest target if not mining
-//            		if (!mining) {
-//            			if (!pf.isTargeting()) {
-//                			MapLocation target = breadthFirstSearchMap(gc, currentMap, 'b', unitCoord[0], unitCoord[1]);
-//                			System.out.println(unit.id() + ": new target: " + target);
-//                			pf.target(unitCoord[0], unitCoord[1], target.getX(), target.getY());
-//                		}
-//            			
-//            			// Move the unit if it didn't mine, either new target or old
-//            			Direction next = pf.advanceStep();
-//            			System.out.println(unit.id() + ": move direction " + next);
-//            			if (next != null && gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), next)) {
-//            				gc.moveRobot(unit.id(), next);
-//                			System.out.println(unit.id() + ": moved to " + unit.location().mapLocation());
-//            			}
-//            		}
+            		// Find the nearest target if not mining
+            		if (!mining) {
+            			if (!pf.isTargeting()) {
+                			MapLocation target = breadthFirstSearchMap(gc, currentMap, 'b', unitCoord[0], unitCoord[1]);
+                			System.out.println(unit.id() + ": new target: " + target);
+                			pf.updateMap(currentMap);
+                			pf.target(unitCoord[0], unitCoord[1], target.getX(), target.getY());
+                		}
+            			
+            			// Move the unit if it didn't mine, either new target or old
+            			Direction next = pf.nextStep();
+            			System.out.println(unit.id() + ": move direction " + next);
+            			if (next != null && gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), next)) {
+            				gc.moveRobot(unit.id(), next);
+            				pf.advanceStep();
+                			System.out.println(unit.id() + ": moved to " + unit.location().mapLocation());
+            			}
+            		}
             	}
             	
             	
