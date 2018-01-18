@@ -103,6 +103,7 @@ public class Player {
             		
             		// See if the worker is standing on karbonite that is is supposed to mine, if it is, mine it
             		boolean mining = false;
+            		System.out.println(unit.id() + ": Standing on " + gc.karboniteAt(unitMapLocation) + "k");
             		if (gc.karboniteAt(unitMapLocation) > 0 && unitMapLocation.equals(pf.getTarget())) {
             			System.out.println(unit.id() + ": Mining karbonite | " + gc.karboniteAt(unitMapLocation));
             			mining = true;
@@ -111,10 +112,10 @@ public class Player {
             			// target is correct but it ran out
             			if (gameMap.get(unitMapLocation.getX(), unitMapLocation.getY()).getTag() == '1') {
             				System.out.println("Ran out of karbonite at " + unitMapLocation);
-            				gameMap.get(unitMapLocation.getX(), unitMapLocation.getY()).setTag('0'); // Clear the 
+            				gameMap.get(unitMapLocation.getX(), unitMapLocation.getY()).setTag('0'); // Clear the square
             			}
             		}
-//            		
+
             		// Travel logic only if not mining
             		if (!mining) {
             			if (!pf.isTargeting()) {

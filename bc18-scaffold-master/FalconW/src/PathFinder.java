@@ -46,6 +46,7 @@ public class PathFinder {
 		this.targeting = false;
 		this.closedSet = new ArrayList<AStarNode>();
 		this.openSet = new ArrayList<AStarNode>();
+		this.planet = map.getPlanet();
 		initMap(map);
 	}
 	
@@ -119,7 +120,12 @@ public class PathFinder {
 	}
 	
 	public MapLocation getTarget() {
-		return new MapLocation(this.planet, endx, endy);
+		try {
+			MapLocation target = new MapLocation(this.planet, endx, endy);
+			return target;
+		} catch (NullPointerException e) {
+			return null;
+		}
 	}
 	
 	public boolean isTargeting() {

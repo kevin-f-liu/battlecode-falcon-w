@@ -55,17 +55,12 @@ public class FalconMap {
 		}
 	}
 	
-	public MapNode get(int x, int y) {
-		return map[y][x];
+	public Planet getPlanet() {
+		return this.planet;
 	}
 	
-	public void printMap() {
-		for (int i = 0; i < this.map.length; i++) {
-			for (int j = 0; j < this.map[0].length; j++) {
-				System.out.print(this.map[i][j].getTag());
-			}
-			System.out.println();
-		}
+	public MapNode get(int x, int y) {
+		return map[y][x];
 	}
 	
 	public void decreaseKarbonite(int x, int y, int amount) {
@@ -114,5 +109,14 @@ public class FalconMap {
 		
 		// Nothing found. Just be careful when handling these return values
 		return null;
+	}
+	
+	public void printMap() {
+		for (int i = 0; i < this.map.length; i++) {
+			for (int j = 0; j < this.map[0].length; j++) {
+				System.out.print(this.map[i][j].getTag());
+			}
+			System.out.println();
+		}
 	}
 }
