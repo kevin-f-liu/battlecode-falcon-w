@@ -74,23 +74,19 @@ public class Player {
         // Connect to the manager, starting the game
         GameController gc = new GameController();
         // Fetch the map of the current planet and store it in an array
- 		char[][] currentMap = fetchMapData(gc.planet(), gc);
- 		for (char[] a : currentMap) {
- 			System.out.println(a);
- 		}
+ 		FalconMap gameMap = new FalconMap(gc);
+ 		gameMap.printMap();
  		
  		HashMap<Integer, PathFinder> pathFinders = new HashMap<Integer, PathFinder>();
 
         while (true) {
             System.out.println("Current round: "+gc.round());
             
-            
             VecUnit myUnits = gc.myUnits();
             for (int i = 0; i < myUnits.size(); i++) {
             	// Store stuff for every unit
             	Unit unit = myUnits.get(i);
             	MapLocation unitMapLocation = unit.location().mapLocation();
-            	int[] unitCoord = new int[] {unitMapLocation.getX(), unitMapLocation.getY()};
             	
             	// Begin if chain
             	if (unit.unitType() == UnitType.Worker) {
@@ -99,32 +95,33 @@ public class Player {
             		if (!pathFinders.containsKey(new Integer(unit.id()))) {
             			// Add to map if new unit
             			System.out.println(unit.id() + ": new pathfinder");
-            			pf = new PathFinder(currentMap);
+            			pf = new PathFinder(gameMap);
             			pathFinders.put(new Integer(unit.id()), pf);
             		} else {
             			pf = pathFinders.get(new Integer(unit.id()));
             		}
             		
-            		// See if the worker is standing on karbonite, if it is, mine it
+            		// See if the worker is standing on karbonite that is is supposed to mine, if it is, mine it
             		boolean mining = false;
-            		if (gc.karboniteAt(unitMapLocation) > 0) {
+            		if (gc.karboniteAt(unitMapLocation) > 0 && unitMapLocation.equals(pf.getTarget())) {
             			System.out.println(unit.id() + ": Mining karbonite | " + gc.karboniteAt(unitMapLocation));
             			mining = true;
             			gc.harvest(unit.id(), Direction.Center);
-            		} else {
-            			if (currentMap[unitCoord[0]][unitCoord[1]] == 'b') {
+            		} else if (unitMapLocation.equals(pf.getTarget())){
+            			// target is correct but it ran out
+            			if (gameMap.get(unitMapLocation.getX(), unitMapLocation.getY()).getTag() == '1') {
             				System.out.println("Ran out of karbonite at " + unitMapLocation);
-            				currentMap[unitCoord[0]][unitCoord[1]] = '0';
+            				gameMap.get(unitMapLocation.getX(), unitMapLocation.getY()).setTag('0'); // Clear the 
             			}
             		}
 //            		
-            		// Find the nearest target if not mining
+            		// Travel logic only if not mining
             		if (!mining) {
             			if (!pf.isTargeting()) {
-                			MapLocation target = breadthFirstSearchMap(gc, currentMap, 'b', unitCoord[0], unitCoord[1]);
+                			MapLocation target = gameMap.ringSearch(unitMapLocation.getX(), unitMapLocation.getY(), '1');
                 			System.out.println(unit.id() + ": new target: " + target);
-                			pf.updateMap(currentMap);
-                			pf.target(unitCoord[0], unitCoord[1], target.getX(), target.getY());
+                			pf.updateMap(gameMap);
+                			pf.target(unitMapLocation.getX(), unitMapLocation.getY(), target.getX(), target.getY());
                 		}
             			
             			// Move the unit if it didn't mine, either new target or old

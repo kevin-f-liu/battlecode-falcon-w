@@ -1,84 +1,86 @@
 import java.util.ArrayList;
-import bc.Direction;
+import bc.*;
 
 // Implement A* pathfinding algorithm
 // Maintains its own map of nodes
 public class PathFinder {
-	// Node class to facilitate pathing
-	private class Node {
-		public int x;
-		public int y;
-		public Node parentNode;
-		public Node nextNode;
-		public char content;
+	private class AStarNode extends MapNode{
+		// AStarNode is a MapNode with path references
+		public AStarNode parentNode;
+		public AStarNode nextNode;
 		public int gCost = 0;
-		public double hCost;
-		public double fCost;
+		public double hCost = 0;
+		public double fCost = 0;
 		
-		public Node(int x, int y, char content) {
-			this.x = x;
-			this.y = y;
-			this.content = content;
+		public AStarNode(int x, int y, char content, boolean walkable) {
+			super(x, y, 0, content, walkable);
+
 			this.parentNode = null;
 			this.nextNode = null;
-		}
-		
-		public boolean isWalkable() {
-			return this.content == '0' || this.content == 'b';
 		}
 		
 		public void setFCost() {
 			this.fCost = this.gCost + this.hCost;
 		}
-		
-		public String toString() {
-			return "(" + this.x + ", " + this.y + ")";
-		}
 	}
 	
-	public Node[][] map;
+	public AStarNode[][] map;
+	public Planet planet;
 	public int height;
 	public int width;
+	
 	public int startx;
 	public int starty;
 	public int endx;
 	public int endy;
 	public boolean targeting;
-	private ArrayList<Node> closedSet;
-	private ArrayList<Node> openSet;
-	public ArrayList<Node> path;
-	public Node current;
+	public AStarNode current;
+
+	private ArrayList<AStarNode> closedSet;
+	private ArrayList<AStarNode> openSet;
+	public ArrayList<AStarNode> path;
 	
-	public PathFinder(char[][] map) {
-		this.height = map.length;
-		this.width = map[0].length;
+	public PathFinder(FalconMap map) {
+		this.height = map.height;
+		this.width = map.width;
 		this.targeting = false;
-		this.closedSet = new ArrayList<Node>();
-		this.openSet = new ArrayList<Node>();
-		createNodeMap(map);
+		this.closedSet = new ArrayList<AStarNode>();
+		this.openSet = new ArrayList<AStarNode>();
+		initMap(map);
 	}
 	
-	private void createNodeMap(char[][] map) {
-		this.map = new Node[height][width];
-		for (int i = 0; i < map.length; i++) {
-			for (int j = 0; j < map[0].length; j++) {
-				this.map[i][j] = new Node(j, i, map[i][j]);
+	private void initMap(FalconMap map) {
+		// Does a clone of a FalconMap 
+		this.map = new AStarNode[height][width];
+		for (int i = 0; i < this.height; i++) {
+			for (int j = 0; j < this.width; j++) {
+				this.map[i][j] = new AStarNode(j, i, map.get(j, i).getTag(), map.isPassable(j, i));
 			}
 		}
 	}
 	
-	public double getHDistance(Node a, Node b) {
+	public void updateMap(FalconMap map) {
+		// Only updates the map, assuming the incoming map dimensions are the same
+		for (int i = 0; i < this.height; i++) {
+			for (int j = 0; j < this.width; j++) {
+				this.map[i][j].setPassable(map.isPassable(j, i));
+				this.map[i][j].setTag(map.get(j, i).getTag());
+			}
+		}
+	}
+	
+	public double getHDistance(AStarNode a, AStarNode b) {
 		return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
 	}
 	
-	private ArrayList<Node> getNeighbours(int x, int y) {
+	private ArrayList<AStarNode> getNeighbours(int x, int y) {
 		// Get every walkable neighbour
-		ArrayList<Node> neighbours = new ArrayList<Node>();
+		ArrayList<AStarNode> neighbours = new ArrayList<AStarNode>();
 		
 		for (int i = y - 1; i <= y + 1; i ++) {
 			for (int j = x - 1; j <= x + 1; j ++) {
 				if (j != x || i != y) {
-					if (j >= 0 && i >= 0 && i < this.height && j < this.width && this.map[i][j].isWalkable()) {
+					if (j >= 0 && i >= 0 && i < this.height && j < this.width && this.map[i][j].isPassable()) {
 						neighbours.add(this.map[i][j]);
 					}
 				}
@@ -88,19 +90,14 @@ public class PathFinder {
 		return neighbours;
 	}
 	
-	public void updateMap(char[][] newMap) {
-		createNodeMap(newMap);
-	}
-	
-	public void recalculate(char[][] newMap) {
-		// Heuristic to slightly modify path, to avoid recalculating everything
-		// Currently just clears current state and reprocesses a path
-		createNodeMap(newMap);
+	public void recalculate(FalconMap newMap) {
+		// When the map is updated
+		updateMap(newMap);
 		calculatePath(this.current.x, this.current.y, this.endx, this.endy);
 	}
 	
 	public void target(int startx, int starty, int endx, int endy) {
-		// Basic call
+		// Basic call, specifies current location
 		this.targeting = true;
 		if (this.map == null) {
 			throw (new RuntimeException("You need to init a map first"));
@@ -109,6 +106,7 @@ public class PathFinder {
 	}
 	
 	public void retarget(int x, int y) {
+		// Same Map
 		// Change target so must recalculate as well
 		if (this.current == null) {
 			throw (new RuntimeException("You can't retarget something that was never targeted in the first place"));
@@ -118,6 +116,10 @@ public class PathFinder {
 		this.startx = this.current.x;
 		this.starty = this.current.y;	
 		calculatePath(this.startx, this.starty, this.endx, this.endy);
+	}
+	
+	public MapLocation getTarget() {
+		return new MapLocation(this.planet, endx, endy);
 	}
 	
 	public boolean isTargeting() {
@@ -131,8 +133,9 @@ public class PathFinder {
 		if (this.current.nextNode == null) {
 			// Done pathing
 			this.targeting = false;
+		} else {
+			this.current = this.current.nextNode;
 		}
-		this.current = this.current.nextNode;
 	}
 	
 	public Direction nextStep() {
@@ -147,7 +150,7 @@ public class PathFinder {
 			return null;
 		}
 		
-		Node next = this.current.nextNode;
+		AStarNode next = this.current.nextNode;
 		
 		Direction ret = null;
 		// NOTE: This part is confusing because of the way BattleCode describes the arrays. 
@@ -186,10 +189,10 @@ public class PathFinder {
 		return ret;
 	}
 	
-	private void createPath(Node startNode, Node endNode) {
+	private void createPath(AStarNode startNode, AStarNode endNode) {
 		// Fills the path list and links all elements together
-		this.path = new ArrayList<Node>();
-		Node current = endNode;
+		this.path = new ArrayList<AStarNode>();
+		AStarNode current = endNode;
 		this.path.add(current);
 		while (current.x != startNode.x || current.y != startNode.y) {
 			current.parentNode.nextNode = current;
@@ -202,7 +205,7 @@ public class PathFinder {
 	public ArrayList<int[]> getPath() {
 		// Debugging method that gets just the coordinates
 		ArrayList<int[]> ret = new ArrayList<int[]>();
-		for (Node n : this.path) {
+		for (AStarNode n : this.path) {
 			ret.add(new int[] {n.x, n.y});
 		}
 		return ret;
@@ -210,26 +213,26 @@ public class PathFinder {
 	
 	public void calculatePath(int startx, int starty, int endx, int endy) {
 		// Reset everything
-		this.openSet = new ArrayList<Node>();
-		this.closedSet = new ArrayList<Node>();
-		this.path = new ArrayList<Node>();
+		this.openSet = new ArrayList<AStarNode>();
+		this.closedSet = new ArrayList<AStarNode>();
+		this.path = new ArrayList<AStarNode>();
 		
 		this.startx = startx;
 		this.starty = starty;
 		this.endx = endx;
 		this.endy = endy;
 		
-		Node startNode = new Node(startx, starty, '0');
-		Node endNode = new Node(endx, endy, '0');
-		Node currentNode = startNode;
+		AStarNode startNode = this.map[starty][startx];
+		AStarNode endNode = this.map[endy][endx];
+		AStarNode currentNode = startNode;
 		currentNode.gCost = 0;
 		currentNode.hCost = this.getHDistance(currentNode, endNode);
 		this.openSet.add(currentNode);
 		
 		while (!this.openSet.isEmpty()) {
 			// First find the best node in the open set, by fCost
-			Node bestNode = null;
-			for (Node n : this.openSet) {
+			AStarNode bestNode = null;
+			for (AStarNode n : this.openSet) {
 				if (bestNode == null) {
 					bestNode = n;
 				}
@@ -244,8 +247,8 @@ public class PathFinder {
 			this.closedSet.add(bestNode);
 			
 			// Find all neighbouring nodes and add to open set if not in closed set or open set
-			ArrayList<Node> neighbours = this.getNeighbours(currentNode.x, currentNode.y);
-			for (Node n : neighbours) {
+			ArrayList<AStarNode> neighbours = this.getNeighbours(currentNode.x, currentNode.y);
+			for (AStarNode n : neighbours) {
 				if (!this.closedSet.contains(n) && !this.openSet.contains(n)) {
 					this.openSet.add(n);
 				}

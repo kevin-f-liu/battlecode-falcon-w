@@ -59,7 +59,7 @@ public class Tester {
 		}
 		
 		map.printMap();
-		int[] ans = map.ringSearch(0, height - 1, '1');
+		int[] ans = map.ringSearch(8, 20, '1');
 		System.out.println(ans[0] + ", " + ans[1]);
 		
 //		PathFinder pf = new PathFinder(map);

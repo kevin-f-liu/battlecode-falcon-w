@@ -1,19 +1,19 @@
 import java.util.ArrayList;
-import bc.Direction;
+import bc.*;
 
 // Implement A* pathfinding algorithm
 // Maintains its own map of nodes
 public class PathFinder {
-	// AStarNode class to facilitate pathing
 	private class AStarNode extends MapNode{
+		// AStarNode is a MapNode with path references
 		public AStarNode parentNode;
 		public AStarNode nextNode;
 		public int gCost = 0;
-		public double hCost;
-		public double fCost;
+		public double hCost = 0;
+		public double fCost = 0;
 		
-		public AStarNode(int x, int y, char content) {
-			super(x, y, content);
+		public AStarNode(int x, int y, char content, boolean walkable) {
+			super(x, y, 0, content, walkable);
 
 			this.parentNode = null;
 			this.nextNode = null;
@@ -25,32 +25,46 @@ public class PathFinder {
 	}
 	
 	public AStarNode[][] map;
+	public Planet planet;
 	public int height;
 	public int width;
+	
 	public int startx;
 	public int starty;
 	public int endx;
 	public int endy;
 	public boolean targeting;
+	public AStarNode current;
+
 	private ArrayList<AStarNode> closedSet;
 	private ArrayList<AStarNode> openSet;
 	public ArrayList<AStarNode> path;
-	public AStarNode current;
 	
-	public PathFinder(char[][] map) {
-		this.height = map.length;
-		this.width = map[0].length;
+	public PathFinder(FalconMap map) {
+		this.height = map.height;
+		this.width = map.width;
 		this.targeting = false;
 		this.closedSet = new ArrayList<AStarNode>();
 		this.openSet = new ArrayList<AStarNode>();
-		createNodeMap(map);
+		initMap(map);
 	}
 	
-	private void createNodeMap(char[][] map) {
+	private void initMap(FalconMap map) {
+		// Does a clone of a FalconMap 
 		this.map = new AStarNode[height][width];
-		for (int i = 0; i < map.length; i++) {
-			for (int j = 0; j < map[0].length; j++) {
-				this.map[i][j] = new AStarNode(j, i, map[i][j]);
+		for (int i = 0; i < this.height; i++) {
+			for (int j = 0; j < this.width; j++) {
+				this.map[i][j] = new AStarNode(j, i, map.get(j, i).getTag(), map.isPassable(j, i));
+			}
+		}
+	}
+	
+	public void updateMap(FalconMap map) {
+		// Only updates the map, assuming the incoming map dimensions are the same
+		for (int i = 0; i < this.height; i++) {
+			for (int j = 0; j < this.width; j++) {
+				this.map[i][j].setPassable(map.isPassable(j, i));
+				this.map[i][j].setTag(map.get(j, i).getTag());
 			}
 		}
 	}
@@ -66,7 +80,7 @@ public class PathFinder {
 		for (int i = y - 1; i <= y + 1; i ++) {
 			for (int j = x - 1; j <= x + 1; j ++) {
 				if (j != x || i != y) {
-					if (j >= 0 && i >= 0 && i < this.height && j < this.width && this.map[i][j].isWalkable()) {
+					if (j >= 0 && i >= 0 && i < this.height && j < this.width && this.map[i][j].isPassable()) {
 						neighbours.add(this.map[i][j]);
 					}
 				}
@@ -76,19 +90,14 @@ public class PathFinder {
 		return neighbours;
 	}
 	
-	public void updateMap(char[][] newMap) {
-		createNodeMap(newMap);
-	}
-	
-	public void recalculate(char[][] newMap) {
-		// Heuristic to slightly modify path, to avoid recalculating everything
-		// Currently just clears current state and reprocesses a path
-		createNodeMap(newMap);
+	public void recalculate(FalconMap newMap) {
+		// When the map is updated
+		updateMap(newMap);
 		calculatePath(this.current.x, this.current.y, this.endx, this.endy);
 	}
 	
 	public void target(int startx, int starty, int endx, int endy) {
-		// Basic call
+		// Basic call, specifies current location
 		this.targeting = true;
 		if (this.map == null) {
 			throw (new RuntimeException("You need to init a map first"));
@@ -97,6 +106,7 @@ public class PathFinder {
 	}
 	
 	public void retarget(int x, int y) {
+		// Same Map
 		// Change target so must recalculate as well
 		if (this.current == null) {
 			throw (new RuntimeException("You can't retarget something that was never targeted in the first place"));
@@ -106,6 +116,10 @@ public class PathFinder {
 		this.startx = this.current.x;
 		this.starty = this.current.y;	
 		calculatePath(this.startx, this.starty, this.endx, this.endy);
+	}
+	
+	public MapLocation getTarget() {
+		return new MapLocation(this.planet, endx, endy);
 	}
 	
 	public boolean isTargeting() {
@@ -119,8 +133,9 @@ public class PathFinder {
 		if (this.current.nextNode == null) {
 			// Done pathing
 			this.targeting = false;
+		} else {
+			this.current = this.current.nextNode;
 		}
-		this.current = this.current.nextNode;
 	}
 	
 	public Direction nextStep() {
@@ -207,8 +222,8 @@ public class PathFinder {
 		this.endx = endx;
 		this.endy = endy;
 		
-		AStarNode startNode = new AStarNode(startx, starty, '0');
-		AStarNode endNode = new AStarNode(endx, endy, '0');
+		AStarNode startNode = this.map[starty][startx];
+		AStarNode endNode = this.map[endy][endx];
 		AStarNode currentNode = startNode;
 		currentNode.gCost = 0;
 		currentNode.hCost = this.getHDistance(currentNode, endNode);
