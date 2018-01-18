@@ -136,12 +136,11 @@ public class PathFinder {
 		if (this.current == null) {
 			throw (new RuntimeException("You must calculate a path first"));
 		}
+		this.current = this.current.nextNode;
 		if (this.current.nextNode == null) {
 			// Done pathing
 			this.targeting = false;
-		} else {
-			this.current = this.current.nextNode;
-		}
+		} 
 	}
 	
 	public Direction nextStep() {

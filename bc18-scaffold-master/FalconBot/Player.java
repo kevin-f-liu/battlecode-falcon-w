@@ -101,6 +101,8 @@ public class Player {
             			pf = pathFinders.get(new Integer(unit.id()));
             		}
             		
+            		System.out.println(unit.id() + "LOC: " + unitMapLocation);
+            		
             		// See if the worker is standing on karbonite that is is supposed to mine, if it is, mine it
             		boolean mining = false;
             		System.out.println(unit.id() + ": Standing on " + gc.karboniteAt(unitMapLocation) + "k");
@@ -131,7 +133,7 @@ public class Player {
             			if (next != null && gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), next)) {
             				gc.moveRobot(unit.id(), next);
             				pf.advanceStep();
-                			System.out.println(unit.id() + ": moved to " + unit.location().mapLocation());
+                			System.out.println(unit.id() + ": moved to " + gc.unit(unit.id()).location().mapLocation());
             			}
             		}
             	}
