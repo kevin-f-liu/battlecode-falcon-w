@@ -27,7 +27,7 @@ public class EnemyLocations {
 	//within attack range, within one move of our units
 	
 	/**
-	 * Method that returns an ArrayList of units that can currently attack the given unit.
+	 * Method that returns an ArrayList of enemy units that can currently attack the given unit.
 	 * @param unit
 	 * @return
 	 */
@@ -59,7 +59,7 @@ public class EnemyLocations {
 	}
 	
 	/**
-	 * Method that returns an ArrayList of units that the given unit can attack. 
+	 * Method that returns an ArrayList of enemy units that the given unit can attack. 
 	 * @param gc
 	 * @param unit
 	 * @return
@@ -94,9 +94,7 @@ public class EnemyLocations {
 				}
 			}
 		}	
-		
-		
-		
+				
 		
 		return attackable;
 	}

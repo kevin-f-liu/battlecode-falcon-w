@@ -6,7 +6,7 @@ public class CombatManeuver {
 
 	private ArrayList<Unit> playerCombatUnits;
 	private ArrayList<Unit> enemyCombatUnits;
-	private final int KNIGHT_POWER = 2;
+	private final int KNIGHT_POWER = 2; // These can be learned automatically exdee
 	private final int MAGE_POWER = 4;
 	private final int RANGER_POWER = 6;
 	private int playerPowerScore;
