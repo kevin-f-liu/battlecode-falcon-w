@@ -22,6 +22,12 @@ public class PathFinder {
 		public void setFCost() {
 			this.fCost = this.gCost + this.hCost;
 		}
+		
+		public void resetCosts() {
+			this.gCost = 0;
+			this.hCost = 0;
+			this.fCost = 0;
+		}
 	}
 	
 	public AStarNode[][] map;
@@ -66,6 +72,7 @@ public class PathFinder {
 			for (int j = 0; j < this.width; j++) {
 				this.map[i][j].setPassable(map.isPassable(j, i));
 				this.map[i][j].setTag(map.get(j, i).getTag());
+				this.map[i][j].resetCosts();
 			}
 		}
 	}
@@ -210,10 +217,27 @@ public class PathFinder {
 	public ArrayList<int[]> getPath() {
 		// Debugging method that gets just the coordinates
 		ArrayList<int[]> ret = new ArrayList<int[]>();
-		for (AStarNode n : this.path) {
-			ret.add(new int[] {n.x, n.y});
+		try {
+			for (AStarNode n : this.path) {
+				ret.add(new int[] {n.x, n.y});
+			}
+		} catch (NullPointerException ex) {
+			System.out.println("No path to get!");
 		}
+		
 		return ret;
+	}
+	
+	public void printPath(int unitid) {
+		String ret = "";
+		try {
+			for (AStarNode n : this.path) {
+				ret += "[" + n.x + ", " + n.y + "]";
+			}
+			System.out.println(unitid + ": " + ret);
+		} catch (NullPointerException ex) {
+			System.out.println("No path to print!");
+		}
 	}
 	
 	public void calculatePath(int startx, int starty, int endx, int endy) {

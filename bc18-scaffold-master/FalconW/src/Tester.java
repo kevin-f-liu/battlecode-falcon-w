@@ -59,30 +59,35 @@ public class Tester {
 		}
 		
 		map.printMap();
-		int[] ans = map.ringSearch(8, 20, '1');
-		System.out.println(ans[0] + ", " + ans[1]);
+//		int[] ans = map.ringSearch(8, 20, '1');
+//		System.out.println(ans[0] + ", " + ans[1]);
 		
-//		PathFinder pf = new PathFinder(map);
-//		pf.target(29, 0, 0, 0);
-//		ArrayList<int[]> path = pf.getPath();
-//		for (int[] node : path) {
-//			map[node[1]][node[0]] = 'x';
-//		}
-//		
-//		printArray(map);
-//		
-//		boolean running = true;
-//		while (running) {
-//			try {
-//				System.out.println(pf.current);
-//				System.out.println(pf.nextStep());
-//				pf.advanceStep();
-//			} catch (RuntimeException e) {
-//				System.out.println(e.getMessage());
-//				running  = false;
-//			}
-//			
-//		}
+		PathFinder pf = new PathFinder(map);
+		int startx = 9;
+		int starty = 7;
+		int endx = 8;
+		int endy = 8;
+		pf.target(startx, starty, endx, endy);
+		ArrayList<int[]> path = pf.getPath();
+		for (int[] node : path) {
+			map.get(node[0], node[1]).setTag('x'); 
+		}
+		map.get(startx, starty).setTag('s');
+		
+		map.printMap();
+		
+		boolean running = true;
+		while (running) {
+			try {
+				System.out.println(pf.current);
+				System.out.println(pf.nextStep());
+				pf.advanceStep();
+			} catch (RuntimeException e) {
+				System.out.println(e.getMessage());
+				running  = false;
+			}
+			
+		}
 		
 		
 	}

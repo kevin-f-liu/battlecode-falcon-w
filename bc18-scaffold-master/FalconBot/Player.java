@@ -125,6 +125,7 @@ public class Player {
                 			System.out.println(unit.id() + ": new target: " + target);
                 			pf.updateMap(gameMap);
                 			pf.target(unitMapLocation.getX(), unitMapLocation.getY(), target.getX(), target.getY());
+                			pf.printPath(unit.id()); // Print the path for debugging
                 		}
             			
             			// Move the unit if it didn't mine, either new target or old
