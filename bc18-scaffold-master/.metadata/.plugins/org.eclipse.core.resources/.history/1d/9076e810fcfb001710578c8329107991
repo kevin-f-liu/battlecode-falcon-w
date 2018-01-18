@@ -64,7 +64,7 @@ public class EnemyLocations {
 	 * @param unit
 	 * @return
 	 */
-	public ArrayList<Unit> attackableList(GameController gc, Unit unit){
+	public ArrayList<Unit> canAttack(GameController gc, Unit unit){
 		
 		ArrayList<Unit> attackable = new ArrayList<Unit>();
 		

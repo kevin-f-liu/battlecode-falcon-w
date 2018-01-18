@@ -11,6 +11,7 @@ public class CombatManeuver {
 	private final int RANGER_POWER = 6;
 	private int playerPowerScore;
 	private int enemyPowerScore;
+	
 
 	public CombatManeuver() {
 		playerPowerScore = 0;
@@ -19,36 +20,23 @@ public class CombatManeuver {
 		enemyCombatUnits = new ArrayList<Unit>();
 	}
 
-	/**
-	 * Updates the Power Score of our team, and the power score of enemy team.
-	 * @param ourUnits
-	 * @param enemies
-	 * @return int[] containing playerPowerScore, enemyPowerScore.
-	 */
-	public int[] updatePowerScore(PlayerUnits ourUnits, EnemyLocations enemies) {
+	public int updatePowerScore(PlayerUnits ourUnits, EnemyLocations enemies) {
 		PlayerUnits enemyUnits = enemies.getEnemyUnits();
-
+		
 		for (Unit u : ourUnits.getMages().values()) {
 			playerPowerScore += MAGE_POWER;
 		}
 		for (Unit u : ourUnits.getKnights().values()) {
 			playerPowerScore += KNIGHT_POWER;
 		}
-		for (Unit u : ourUnits.getRangers().values()) {
+		for (Unit u : ourUnits.getMages().values()) {
 			playerPowerScore += RANGER_POWER;
 		}
-
-		for (Unit u : enemyUnits.getMages().values()) {
-			enemyPowerScore += MAGE_POWER;
-		}
-		for (Unit u : enemyUnits.getKnights().values()) {
-			enemyPowerScore += KNIGHT_POWER;
-		}
-		for (Unit u : enemyUnits.getRangers().values()) {
-			enemyPowerScore += RANGER_POWER;
-		}
 		
-		return new int[] {playerPowerScore, enemyPowerScore};
+		
+		
+		
+		return 1;
 	}
 
 	/**

@@ -96,7 +96,6 @@ public class Player {
  		
  		
  		HashMap<Integer, PathFinder> pathFinders = new HashMap<Integer, PathFinder>();
- 		CombatManeuver combatDecisions = new CombatManeuver();
 
         while (true) {
             System.out.println("Current round: "+gc.round());
@@ -107,7 +106,6 @@ public class Player {
             
             // Get Enemy Unit Locations.
             EnemyLocations enemies = new EnemyLocations(gc, ENEMY_TEAM);
-            
             
             /**
              * Workers Portion
@@ -162,12 +160,6 @@ public class Player {
             	} 	
             	
             }
-            
-            /**
-             * Code portion start for combat units
-             */
-            //Update PowerScores for combat decision making
-            int[] powerScores = combatDecisions.updatePowerScore(myUnits, enemies);
             
             
             
