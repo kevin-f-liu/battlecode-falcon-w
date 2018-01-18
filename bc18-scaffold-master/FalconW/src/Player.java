@@ -65,6 +65,10 @@ public class Player {
 		// Nothing found?
 		return null;
 	}
+	
+	public static void workerMineLogic() {
+		
+	}
 
 	public static void main(String[] args) {
         // Connect to the manager, starting the game
@@ -83,9 +87,12 @@ public class Player {
             
             VecUnit myUnits = gc.myUnits();
             for (int i = 0; i < myUnits.size(); i++) {
+            	// Store stuff for every unit
             	Unit unit = myUnits.get(i);
             	MapLocation unitMapLocation = unit.location().mapLocation();
             	int[] unitCoord = new int[] {unitMapLocation.getX(), unitMapLocation.getY()};
+            	
+            	// Begin if chain
             	if (unit.unitType() == UnitType.Worker) {
             		// Get the worker's pathfinder
             		PathFinder pf;
