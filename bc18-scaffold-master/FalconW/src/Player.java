@@ -65,6 +65,10 @@ public class Player {
 		// Nothing found?
 		return null;
 	}
+	
+	public static void workerMineLogic() {
+		
+	}
 
 	/**
 	 * Main method for decision making
@@ -82,10 +86,8 @@ public class Player {
         // Connect to the manager, starting the game
         GameController gc = new GameController();
         // Fetch the map of the current planet and store it in an array
- 		char[][] currentMap = fetchMapData(gc.planet(), gc);
- 		for (char[] a : currentMap) {
- 			System.out.println(a);
- 		}
+ 		FalconMap gameMap = new FalconMap(gc);
+ 		gameMap.printMap();
  		
  		// Set ENEMY_TEAM constant: this is required for some implemented classes.
  		if (gc.team() == Team.Blue){
@@ -107,47 +109,50 @@ public class Player {
             
             // Get Enemy Unit Locations.
             EnemyLocations enemies = new EnemyLocations(gc, ENEMY_TEAM);
-            
-            
-            /**
-             * Workers Portion
-             */
+
             HashMap<Integer, Unit> workers = myUnits.getWorkers();
             for (Unit unit: workers.values()) {
-            	MapLocation unitMapLocation = unit.location().mapLocation();
-            	int[] unitCoord = new int[] { unitMapLocation.getX(), unitMapLocation.getY()};
+				MapLocation unitMapLocation = unit.location().mapLocation();
+				/**
+				 * Worker Portion
+				 */
             	if (unit.unitType() == UnitType.Worker) {
             		// Get the worker's pathfinder
             		PathFinder pf;
             		if (!pathFinders.containsKey(new Integer(unit.id()))) {
             			// Add to map if new unit
             			System.out.println(unit.id() + ": new pathfinder");
-            			pf = new PathFinder(currentMap);
+            			pf = new PathFinder(gameMap);
             			pathFinders.put(new Integer(unit.id()), pf);
             		} else {
             			pf = pathFinders.get(new Integer(unit.id()));
             		}
             		
-            		// See if the worker is standing on karbonite, if it is, mine it
+            		System.out.println(unit.id() + "LOC: " + unitMapLocation);
+            		
+            		// See if the worker is standing on karbonite that is is supposed to mine, if it is, mine it
             		boolean mining = false;
-            		if (gc.karboniteAt(unitMapLocation) > 0) {
+            		System.out.println(unit.id() + ": Standing on " + gc.karboniteAt(unitMapLocation) + "k");
+            		if (gc.karboniteAt(unitMapLocation) > 0 && unitMapLocation.equals(pf.getTarget())) {
             			System.out.println(unit.id() + ": Mining karbonite | " + gc.karboniteAt(unitMapLocation));
             			mining = true;
             			gc.harvest(unit.id(), Direction.Center);
-            		} else {
-            			if (currentMap[unitCoord[0]][unitCoord[1]] == 'b') {
+            		} else if (unitMapLocation.equals(pf.getTarget())){
+            			// target is correct but it ran out
+            			if (gameMap.get(unitMapLocation.getX(), unitMapLocation.getY()).getTag() == '1') {
             				System.out.println("Ran out of karbonite at " + unitMapLocation);
-            				currentMap[unitCoord[0]][unitCoord[1]] = '0';
+            				gameMap.get(unitMapLocation.getX(), unitMapLocation.getY()).setTag('0'); // Clear the square
             			}
             		}
             		
             		// Find the nearest target if not mining
             		if (!mining) {
             			if (!pf.isTargeting()) {
-                			MapLocation target = breadthFirstSearchMap(gc, currentMap, 'b', unitCoord[0], unitCoord[1]);
+                			MapLocation target = gameMap.ringSearch(unitMapLocation.getX(), unitMapLocation.getY(), '1');
                 			System.out.println(unit.id() + ": new target: " + target);
-                			pf.updateMap(currentMap);
-                			pf.target(unitCoord[0], unitCoord[1], target.getX(), target.getY());
+                			pf.updateMap(gameMap);
+                			pf.target(unitMapLocation.getX(), unitMapLocation.getY(), target.getX(), target.getY());
+                			pf.printPath(unit.id()); // Print the path for debugging
                 		}
             			
             			// Move the unit if it didn't mine, either new target or old
@@ -156,7 +161,7 @@ public class Player {
             			if (next != null && gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), next)) {
             				gc.moveRobot(unit.id(), next);
             				pf.advanceStep();
-                			System.out.println(unit.id() + ": moved to " + unit.location().mapLocation());
+                			System.out.println(unit.id() + ": moved to " + gc.unit(unit.id()).location().mapLocation());
             			}
             		}
             	} 	
