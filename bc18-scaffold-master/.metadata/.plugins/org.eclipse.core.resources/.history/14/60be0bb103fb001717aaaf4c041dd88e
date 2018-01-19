@@ -1,0 +1,21 @@
+import bc.*;
+
+public class CombatManeuver {
+
+
+	
+	/**
+	 * Method that returns the best target to attack within the attackable units.
+	 * @return
+	 */
+	public Unit targetSelection(GameController gc, Unit unit){
+		
+		
+		
+		
+		return null;
+	}
+	
+	
+	
+}

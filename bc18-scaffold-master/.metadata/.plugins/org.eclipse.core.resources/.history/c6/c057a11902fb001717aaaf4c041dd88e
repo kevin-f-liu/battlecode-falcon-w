@@ -1,0 +1,13 @@
+import bc.*;
+
+public class CombatUnit extends Unit {
+
+	
+	
+	public prioritySelection(){
+		
+	}
+	
+	
+	
+}

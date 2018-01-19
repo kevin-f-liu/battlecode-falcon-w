@@ -1,0 +1,93 @@
+import java.util.ArrayList;
+
+import bc.*;
+
+public class CombatManeuver {
+
+	private ArrayList<Unit> playerCombatUnits;
+	private ArrayList<Unit> enemyCombatUnits;
+	private final int KNIGHT_POWER = 2;
+	private final int MAGE_POWER = 4;
+	private final int RANGER_POWER = 6;
+	private int playerPowerScore;
+	private int enemyPowerScore;
+	
+
+	public CombatManeuver() {
+		playerPowerScore = 0;
+		enemyPowerScore = 0;
+		playerCombatUnits = new ArrayList<Unit>();
+		enemyCombatUnits = new ArrayList<Unit>();
+	}
+
+	public int updatePowerScore(PlayerUnits ourUnits, EnemyLocations enemies) {
+		PlayerUnits enemyUnits = enemies.getEnemyUnits();
+		
+		for (Unit u : ourUnits.getMages().values()) {
+			playerPowerScore += MAGE_POWER;
+		}
+		for (Unit u : ourUnits.getKnights().values()) {
+			playerPowerScore += KNIGHT_POWER;
+		}
+		for (Unit u : ourUnits.getMages().values()) {
+			playerPowerScore += RANGER_POWER;
+		}
+		
+		
+		
+		
+		return 1;
+	}
+
+	/**
+	 * Method that returns the best target to attack within the attackable
+	 * units.
+	 * 
+	 * @return Best possible unit to attack, false otherwise.
+	 */
+	public Unit targetSelection(GameController gc, Unit unit, Team enemyTeam) {
+
+		EnemyLocations enemies = new EnemyLocations(gc, enemyTeam);
+
+		ArrayList<Unit> possibleTargets = enemies.attackableList(gc, unit);
+		ArrayList<Unit> withinRangeOf = enemies.isWithinAttackRange(unit);
+
+		// Check that this Unit can attack another Unit
+		if (possibleTargets.isEmpty() == false) {
+
+			// First attack units that can attack the current Unit.
+			for (Unit u : withinRangeOf) {
+				if (possibleTargets.contains(u) && gc.canAttack(unit.id(), u.id())) {
+					return u;
+				}
+			}
+
+			// Then attack other combat units.
+			for (Unit u : possibleTargets) {
+				if (u.unitType() == UnitType.Knight || u.unitType() == UnitType.Mage || u.unitType() == UnitType.Ranger
+						|| gc.canAttack(unit.id(), u.id())) {
+					return u;
+				}
+			}
+
+			// Attack any possible targets.
+			for (Unit u : possibleTargets) {
+				if (gc.canAttack(unit.id(), u.id())) {
+					return u;
+				}
+			}
+
+		}
+
+		return null;
+	}
+
+	public void setDefensiveMode(Unit unit, GameController gc) {
+
+	}
+
+	public void setAgressiveMode(Unit unit, GameController gc) {
+
+	}
+
+}

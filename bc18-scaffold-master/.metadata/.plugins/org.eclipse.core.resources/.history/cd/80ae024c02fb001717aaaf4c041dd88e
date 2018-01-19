@@ -1,0 +1,18 @@
+import bc.*;
+
+public class CombatManeuver {
+
+	
+	public CombatUnit(){
+		super();
+	}
+	
+	
+	
+	public prioritySelection(){
+		
+	}
+	
+	
+	
+}
