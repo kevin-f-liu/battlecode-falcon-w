@@ -278,7 +278,7 @@ public class PathFinder {
 			// Find all neighbouring nodes and add to open set if not in closed set or open set
 			ArrayList<AStarNode> neighbours = this.getNeighbours(currentNode.x, currentNode.y);
 			for (AStarNode n : neighbours) {
-				if (!this.closedSet.contains(n) && !this.openSet.contains(n)) {
+				if (!this.closedSet.contains(n)) {
 					this.openSet.add(n);
 				}
 				
