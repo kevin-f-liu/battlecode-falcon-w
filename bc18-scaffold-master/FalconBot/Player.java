@@ -70,6 +70,18 @@ public class Player {
 		
 	}
 
+	/**
+	 * Main method for decision making
+	 * foo() => Get data (Resource management, Macro decisions)
+	 * foo2() => Workers move
+	 * foo3() => Workers Action
+	 * foo4() => Combat Units Actionable
+	 * foo4() => Rangers Move
+	 * foo5() => Rangers Action
+	 * foo6() => Mages Move, etc...
+	 * foo_n => endturn()
+	 * @param args
+	 */
 	public static void main(String[] args) {
         // Connect to the manager, starting the game
         GameController gc = new GameController();
@@ -77,18 +89,33 @@ public class Player {
  		FalconMap gameMap = new FalconMap(gc);
  		gameMap.printMap();
  		
+ 		// Set ENEMY_TEAM constant: this is required for some implemented classes.
+ 		if (gc.team() == Team.Blue){
+ 			ENEMY_TEAM = Team.Red;
+ 		} else{
+ 			ENEMY_TEAM = Team.Blue;
+ 		}
+ 		
+ 		
  		HashMap<Integer, PathFinder> pathFinders = new HashMap<Integer, PathFinder>();
+ 		CombatManeuver combatDecisions = new CombatManeuver();
 
         while (true) {
             System.out.println("Current round: "+gc.round());
             
-            VecUnit myUnits = gc.myUnits();
-            for (int i = 0; i < myUnits.size(); i++) {
-            	// Store stuff for every unit
-            	Unit unit = myUnits.get(i);
-            	MapLocation unitMapLocation = unit.location().mapLocation();
-            	
-            	// Begin if chain
+            // Get our Units and put them in a wrapper.
+            VecUnit units = gc.myUnits();
+            PlayerUnits myUnits = new PlayerUnits(units);
+            
+            // Get Enemy Unit Locations.
+            EnemyLocations enemies = new EnemyLocations(gc, ENEMY_TEAM);
+
+            HashMap<Integer, Unit> workers = myUnits.getWorkers();
+            for (Unit unit: workers.values()) {
+				MapLocation unitMapLocation = unit.location().mapLocation();
+				/**
+				 * Worker Portion
+				 */
             	if (unit.unitType() == UnitType.Worker) {
             		// Get the worker's pathfinder
             		PathFinder pf;
@@ -117,8 +144,8 @@ public class Player {
             				gameMap.get(unitMapLocation.getX(), unitMapLocation.getY()).setTag('0'); // Clear the square
             			}
             		}
-
-            		// Travel logic only if not mining
+            		
+            		// Find the nearest target if not mining
             		if (!mining) {
             			if (!pf.isTargeting()) {
                 			MapLocation target = gameMap.ringSearch(unitMapLocation.getX(), unitMapLocation.getY(), '1');
@@ -137,27 +164,21 @@ public class Player {
                 			System.out.println(unit.id() + ": moved to " + gc.unit(unit.id()).location().mapLocation());
             			}
             		}
-            	}
-            	
-            	
-            	
-            	
-            	
-            	
-            	
+            	} 	
             	
             }
             
-            // foo() => Get data
-            // foo2() => Workers move
-            // foo3() => Workers Action
-            // foo4() => 
-            // foo4() => Rangers Move
-            // foo5() => Rangers Action
-            // 
-            // endturn()
-      
-            // Submit the actions we've done, and wait for our next turn.
+            /**
+             * Code portion start for combat units
+             */
+            //Update PowerScores for combat decision making
+            int[] powerScores = combatDecisions.updatePowerScore(myUnits, enemies);
+            
+            
+            
+            
+            
+           
             gc.nextTurn();
         }
     }

@@ -27,7 +27,7 @@ public class EnemyLocations {
 	//within attack range, within one move of our units
 	
 	/**
-	 * Method that returns an ArrayList of units that can currently attack the given unit.
+	 * Method that returns an ArrayList of enemy units that can currently attack the given unit.
 	 * @param unit
 	 * @return
 	 */
@@ -52,20 +52,23 @@ public class EnemyLocations {
 				}
 				
 			}
-			
+			System.out.println("Unit: " + unit.id() + " within enemy " + enemyUnit.unitType().toString() +  " attack range!");
 		}
-		System.out.println("Unit: " + unit.id() + " within enemy attack range!");
+		
 		return canBeAttackedBy;	
 	}
 	
 	/**
-	 * Method that returns an ArrayList of units that given unit can attack. 
+	 * Method that returns an ArrayList of enemy units that the given unit can attack. 
 	 * @param gc
 	 * @param unit
 	 * @return
 	 */
-	public ArrayList<Unit> canAttack(GameController gc, Unit unit){
+	public ArrayList<Unit> attackableList(GameController gc, Unit unit){
+		
 		ArrayList<Unit> attackable = new ArrayList<Unit>();
+		
+		// Account for attack heat here. 
 		if (unit.unitType() == UnitType.Knight){
 			VecUnit surroundingEnemyUnits = gc.senseNearbyUnitsByTeam(unit.location().mapLocation(), 1, ENEMY_TEAM);
 			for (int i = 0; i < surroundingEnemyUnits.size(); i++){
@@ -91,6 +94,12 @@ public class EnemyLocations {
 				}
 			}
 		}	
+				
+		
 		return attackable;
+	}
+	
+	public PlayerUnits getEnemyUnits(){
+		return this.enemies;
 	}
 }
