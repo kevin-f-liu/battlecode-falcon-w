@@ -59,6 +59,12 @@ public class FalconMap {
 		return this.planet;
 	}
 	
+	/**
+	 * Get's a node
+	 * @param x
+	 * @param y 
+	 * @return The node instance
+	 */
 	public MapNode get(int x, int y) {
 		return map[y][x];
 	}
