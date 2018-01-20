@@ -65,10 +65,6 @@ public class Player {
 		// Nothing found?
 		return null;
 	}
-	
-	public static void workerMineLogic() {
-		
-	}
 
 	/**
 	 * Main method for decision making

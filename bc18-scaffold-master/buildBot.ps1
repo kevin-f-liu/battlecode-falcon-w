@@ -1,0 +1,1 @@
+﻿(Get-ChildItem .\FalconW\src) -match '^(?!Tester).*\.java' | Copy-Item -Destination .\FalconBot
