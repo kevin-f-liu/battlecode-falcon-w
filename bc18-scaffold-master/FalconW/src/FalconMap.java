@@ -15,6 +15,7 @@ public class FalconMap {
 	
 	public FalconMap() {
 		// For testing only please don't use this or remove it
+		this.nodeContentMap = new HashMap<Character, ArrayList<MapNode>>();
 	}
 	
 	public FalconMap(GameController gcx) {
@@ -43,32 +44,49 @@ public class FalconMap {
 				tag = '0'; // Default tag to nothing
 				MapNode node = new MapNode(j, i, karbonite, tag, (boolean) (m.isPassableTerrainAt(tmp) == 1));
 				map[i][j] = node;
-				if (nodeContentMap.containsKey(tag)) {
-					// Add node to map if key exists already
-					nodeContentMap.get(tag).add(node);
-				} else {
-					ArrayList<MapNode> nodeList = new ArrayList<MapNode>();
-					nodeList.add(node);
-					nodeContentMap.put(tag, nodeList);
-				}
+				this.updateNodeTag(j, i, tag); // Init the nodes in nodeContentMap
 			}
 		}
 		
-		// Now check every unit and populate into the map
+		// Now check every unit and update the map
 		for (int i = 0; i < initialUnits.size(); i++) {
 			Unit u = initialUnits.get(i);
 			int ux = u.location().mapLocation().getX();
 			int uy = u.location().mapLocation().getY();
-			MapNode node = map[uy][ux];
 			if (u.team() == this.team) {
-				map[uy][ux].setTag('w');
+				this.updateNodeTag(ux, uy, 'w');
 			} else {
-				map[uy][ux].setTag('W');
+				this.updateNodeTag(ux, uy, 'W');
 			}
 		}
 	}
 	
-	public void updateNodeTag(MapNode node, char newTag)
+	/**
+	 * Properly update the node in the map. Changes the tag of the node in map
+	 * as well as the node's position in nodeContentMap
+	 * @param x
+	 * @param y
+	 * @param newTag
+	 */
+	public void updateNodeTag(int x, int y, char newTag) {
+		// Get the node first
+		MapNode node = map[y][x];
+		char oldTag = node.getTag();
+		node.setTag(newTag);
+		if (nodeContentMap.containsKey(oldTag)) {
+			// Remove 
+			nodeContentMap.get(oldTag).remove(node);
+		}
+		if (nodeContentMap.containsKey(newTag)) {
+			// Add node to map if key exists already
+			nodeContentMap.get(newTag).add(node);
+		} else {
+			ArrayList<MapNode> nodeList = new ArrayList<MapNode>();
+			nodeList.add(node);
+			nodeContentMap.put(newTag, nodeList);
+		}
+		
+	}
 	
 	public Planet getPlanet() {
 		return this.planet;
@@ -82,6 +100,10 @@ public class FalconMap {
 	 */
 	public MapNode get(int x, int y) {
 		return map[y][x];
+	}
+	
+	public char getNodetag(int x, int y) { 
+		return this.map[y][x].getTag();
 	}
 	
 	public void decreaseKarbonite(int x, int y, int amount) {

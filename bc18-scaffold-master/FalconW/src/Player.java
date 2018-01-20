@@ -67,7 +67,7 @@ public class Player {
             			pf = pathFinders.get(unit.id());
             		}
             		
-            		System.out.println(unit.id() + "LOC: " + unitMapLocation);
+            		System.out.println(unit.id() + ": now at " + unitMapLocation);
             		
             		// See if the worker is standing on karbonite that is is supposed to mine, if it is, mine it
             		boolean mining = false;
