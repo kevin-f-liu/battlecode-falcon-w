@@ -55,7 +55,7 @@ public class FalconMap {
 			int ux = u.location().mapLocation().getX();
 			int uy = u.location().mapLocation().getY();
 			if (u.team() == this.team) {
-				this.updateNodeTag(ux, uy, 'w');
+				this.updateNodeTag(ux, uy, 'q');
 			} else {
 				this.updateNodeTag(ux, uy, 'W');
 			}
