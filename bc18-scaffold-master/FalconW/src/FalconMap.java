@@ -1,10 +1,12 @@
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import bc.*;
 
 public class FalconMap {
 	public GameController gc;
 	public MapNode[][] map;
+	public HashMap<Character, ArrayList<MapNode>> nodeContentMap;
 	
 	public int width;
 	public int height;
@@ -17,6 +19,7 @@ public class FalconMap {
 	
 	public FalconMap(GameController gcx) {
 		 this.gc = gcx;
+		 this.nodeContentMap = new HashMap<Character, ArrayList<MapNode>>();
 		 this.initMap(gcx);
 		 this.team = gcx.team();
 	}
@@ -37,8 +40,17 @@ public class FalconMap {
 			for (int j = 0; j < (int) width; j++) {
 				MapLocation tmp = new MapLocation(gc.planet(), j, i);
 				karbonite = (int) m.initialKarboniteAt(tmp);
-				tag = karbonite > 0 ? '1' : '0';
-				map[i][j] = new MapNode(j, i, karbonite, tag, (boolean) (m.isPassableTerrainAt(tmp) == 1));
+				tag = '0'; // Default tag to nothing
+				MapNode node = new MapNode(j, i, karbonite, tag, (boolean) (m.isPassableTerrainAt(tmp) == 1));
+				map[i][j] = node;
+				if (nodeContentMap.containsKey(tag)) {
+					// Add node to map if key exists already
+					nodeContentMap.get(tag).add(node);
+				} else {
+					ArrayList<MapNode> nodeList = new ArrayList<MapNode>();
+					nodeList.add(node);
+					nodeContentMap.put(tag, nodeList);
+				}
 			}
 		}
 		
@@ -47,6 +59,7 @@ public class FalconMap {
 			Unit u = initialUnits.get(i);
 			int ux = u.location().mapLocation().getX();
 			int uy = u.location().mapLocation().getY();
+			MapNode node = map[uy][ux];
 			if (u.team() == this.team) {
 				map[uy][ux].setTag('w');
 			} else {
@@ -54,6 +67,8 @@ public class FalconMap {
 			}
 		}
 	}
+	
+	public void updateNodeTag(MapNode node, char newTag)
 	
 	public Planet getPlanet() {
 		return this.planet;
@@ -89,6 +104,13 @@ public class FalconMap {
 		return x >= 0 && x < this.width && y >= 0 && y < this.height;
 	}
 	
+	/**
+	 * Do a search for the nearest mapnode with contentTag matching targetChar
+	 * @param centerX 
+	 * @param centerY
+	 * @param targetChar
+	 * @return MapLocation of the found node
+	 */
 	public MapLocation ringSearch(int centerX, int centerY, char targetChar) {
 		// Search by expanding rings
 		int maxRadius = (int) Math.max(Math.max(this.width - 1 - centerX, centerX), Math.max(this.height - 1 - centerY, centerY));
