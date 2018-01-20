@@ -1,10 +1,13 @@
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Set;
 
 import bc.*;
 
 public class FalconMap {
 	public GameController gc;
 	public MapNode[][] map;
+	public HashMap<Character, ArrayList<MapNode>> nodeContentMap;
 	
 	public int width;
 	public int height;
@@ -13,10 +16,12 @@ public class FalconMap {
 	
 	public FalconMap() {
 		// For testing only please don't use this or remove it
+		this.nodeContentMap = new HashMap<Character, ArrayList<MapNode>>();
 	}
 	
 	public FalconMap(GameController gcx) {
 		 this.gc = gcx;
+		 this.nodeContentMap = new HashMap<Character, ArrayList<MapNode>>();
 		 this.initMap(gcx);
 		 this.team = gcx.team();
 	}
@@ -37,22 +42,51 @@ public class FalconMap {
 			for (int j = 0; j < (int) width; j++) {
 				MapLocation tmp = new MapLocation(gc.planet(), j, i);
 				karbonite = (int) m.initialKarboniteAt(tmp);
-				tag = karbonite > 0 ? '1' : '0';
-				map[i][j] = new MapNode(j, i, karbonite, tag, (boolean) (m.isPassableTerrainAt(tmp) == 1));
+				tag = '0'; // Default tag to nothing
+				MapNode node = new MapNode(j, i, karbonite, tag, (boolean) (m.isPassableTerrainAt(tmp) == 1));
+				map[i][j] = node;
+				this.updateNodeTag(j, i, tag); // Init the nodes in nodeContentMap
 			}
 		}
 		
-		// Now check every unit and populate into the map
+		// Now check every unit and update the map
 		for (int i = 0; i < initialUnits.size(); i++) {
 			Unit u = initialUnits.get(i);
 			int ux = u.location().mapLocation().getX();
 			int uy = u.location().mapLocation().getY();
 			if (u.team() == this.team) {
-				map[uy][ux].setTag('w');
+				this.updateNodeTag(ux, uy, 'w');
 			} else {
-				map[uy][ux].setTag('W');
+				this.updateNodeTag(ux, uy, 'W');
 			}
 		}
+	}
+	
+	/**
+	 * Properly update the node in the map. Changes the tag of the node in map
+	 * as well as the node's position in nodeContentMap
+	 * @param x
+	 * @param y
+	 * @param newTag
+	 */
+	public void updateNodeTag(int x, int y, char newTag) {
+		// Get the node first
+		MapNode node = map[y][x];
+		char oldTag = node.getTag();
+		node.setTag(newTag);
+		if (nodeContentMap.containsKey(oldTag)) {
+			// Remove 
+			nodeContentMap.get(oldTag).remove(node);
+		}
+		if (nodeContentMap.containsKey(newTag)) {
+			// Add node to map if key exists already
+			nodeContentMap.get(newTag).add(node);
+		} else {
+			ArrayList<MapNode> nodeList = new ArrayList<MapNode>();
+			nodeList.add(node);
+			nodeContentMap.put(newTag, nodeList);
+		}
+		
 	}
 	
 	public Planet getPlanet() {
@@ -67,6 +101,10 @@ public class FalconMap {
 	 */
 	public MapNode get(int x, int y) {
 		return map[y][x];
+	}
+	
+	public char getNodetag(int x, int y) { 
+		return this.map[y][x].getTag();
 	}
 	
 	public void decreaseKarbonite(int x, int y, int amount) {
@@ -89,6 +127,13 @@ public class FalconMap {
 		return x >= 0 && x < this.width && y >= 0 && y < this.height;
 	}
 	
+	/**
+	 * Do a search for the nearest mapnode with contentTag matching targetChar
+	 * @param centerX 
+	 * @param centerY
+	 * @param targetChar
+	 * @return MapLocation of the found node
+	 */
 	public MapLocation ringSearch(int centerX, int centerY, char targetChar) {
 		// Search by expanding rings
 		int maxRadius = (int) Math.max(Math.max(this.width - 1 - centerX, centerX), Math.max(this.height - 1 - centerY, centerY));
@@ -123,6 +168,14 @@ public class FalconMap {
 				System.out.print(this.map[i][j].getTag());
 			}
 			System.out.println();
+		}
+	}
+	
+	public void printContentMap() {
+		Set<Character> keys = this.nodeContentMap.keySet();
+		for (Character key : keys) {
+			System.out.print(key + ": ");
+			System.out.println(this.nodeContentMap.get(key));
 		}
 	}
 }

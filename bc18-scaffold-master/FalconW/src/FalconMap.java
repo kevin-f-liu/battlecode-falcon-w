@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 
 import bc.*;
 
@@ -167,6 +168,14 @@ public class FalconMap {
 				System.out.print(this.map[i][j].getTag());
 			}
 			System.out.println();
+		}
+	}
+	
+	public void printContentMap() {
+		Set<Character> keys = this.nodeContentMap.keySet();
+		for (Character key : keys) {
+			System.out.print(key + ": ");
+			System.out.println(this.nodeContentMap.get(key));
 		}
 	}
 }

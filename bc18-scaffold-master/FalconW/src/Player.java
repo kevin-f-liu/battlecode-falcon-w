@@ -27,6 +27,7 @@ public class Player {
         // Fetch the map of the current planet and store it in an array
  		FalconMap gameMap = new FalconMap(gc);
  		gameMap.printMap();
+ 		gameMap.printContentMap();
  		
  		// Set ENEMY_TEAM constant: this is required for some implemented classes.
  		if (gc.team() == Team.Blue){
