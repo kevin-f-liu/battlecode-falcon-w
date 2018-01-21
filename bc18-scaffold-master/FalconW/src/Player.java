@@ -26,6 +26,8 @@ public class Player {
 	public static void updateMap(FalconMap map, VecUnit units) {
 		 map.updateUnits(units);
 		 map.updateKarbonite();
+		 System.out.println(map.karboniteBlobs());
+		 
 	}
 	
 	public static void main(String[] args) {

@@ -1,5 +1,7 @@
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -24,6 +26,9 @@ public class FalconMap {
 	public FalconMap() {
 		// For testing only please don't use this or remove it
 		this.nodeContentMap = new HashMap<Character, ArrayList<MapNode>>();
+		this.initUnitLegend();
+		this.karboniteDeposits = new ArrayList<MapNode>();
+		
 	}
 	
 	public FalconMap(GameController gcx) {
@@ -198,7 +203,7 @@ public class FalconMap {
 	}
 	
 	/**
-	 * Set the karbonite at the given node
+	 * decrease the karbonite at the given node
 	 * @param x
 	 * @param y
 	 * @param amount
@@ -283,6 +288,69 @@ public class FalconMap {
 		// Nothing found. Just be careful when handling these return values
 		return null;
 	}
+	
+	public ArrayList<ArrayList<int[]>> karboniteBlobs() {
+		ArrayList<MapNode> visited = new ArrayList<MapNode>();
+		ArrayDeque<MapNode> unvisited = new ArrayDeque<MapNode>();
+
+		ArrayList<ArrayList<int[]>> blobs = new ArrayList<ArrayList<int[]>>();
+		ArrayList<int[]> blob = new ArrayList<int[]>();
+		int count = 0;
+		int blobcount = 0;
+		for (MapNode node : this.karboniteDeposits) {
+			count++;
+			System.out.println(count);
+			if (!visited.contains(node)) {
+				blobcount ++;
+				System.out.println("BC: " + blobcount);
+				blob = new ArrayList<int[]>();
+				unvisited.clear();
+				unvisited.add(node);
+				while (!unvisited.isEmpty()) {
+					MapNode n = unvisited.removeFirst();
+
+					visited.add(n);
+					blob.add(new int[] {n.x, n.y});
+					for (MapNode neighbour : this.karboniteDeposits) {
+						if (!visited.contains(neighbour) && neighbour != n && Math.abs(neighbour.x - n.x) <= 1 && Math.abs(neighbour.y - n.y) <= 1) {
+							unvisited.push(neighbour);
+						}
+					}
+				}
+				blobs.add(blob);
+			}
+		}
+		
+		return blobs;
+	}
+	
+//	public ArrayList<ArrayList<MapLocation>> karboniteBlobs() {
+//		ArrayList<MapNode> visited = new ArrayList<MapNode>();
+//		ArrayDeque<MapNode> unvisited = new ArrayDeque<MapNode>();
+//
+//		ArrayList<ArrayList<MapLocation>> blobs = new ArrayList<ArrayList<MapLocation>>();
+//		ArrayList<MapLocation> blob = new ArrayList<MapLocation>();
+//		for (MapNode node : this.karboniteDeposits) {
+//			if (!visited.contains(node)) {
+//				blob.clear();
+//				unvisited.clear();
+//				unvisited.add(node);
+//				while (!unvisited.isEmpty()) {
+//					MapNode n = unvisited.removeFirst();
+//					visited.add(n);
+//					blob.add(new MapLocation(this.planet, n.x, n.y));
+//					for (MapNode neighbour : this.karboniteDeposits) {
+//						if (neighbour != n && neighbour.x - n.x <= 1 && neighbour.y - n.y <= 1) {
+//							unvisited.addLast(neighbour);
+//						}
+//					}
+//				}
+//				blobs.add(blob);
+//			}
+//		}
+//		
+//		return blobs;
+//	}
 	
 	/**
 	 * Do a search for the nearest mapnode with contentTag matching targetChar
