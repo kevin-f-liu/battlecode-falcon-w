@@ -5,7 +5,7 @@ public class MapNode {
 	public int y;
 	public int karbonite;
 	public boolean passable;
-	char contentTag; // '0' = Nothing, '1' = Karbonite, 'w' = worker, 'k' = knight, 'r' = ranger, 'm' = mage, 'f' = factory, 'r' = rocket, uppercase = Other team	
+	char contentTag; // '0' = Nothing, 'w' = worker, 'k' = knight, 'r' = ranger, 'm' = mage, 'f' = factory, 'r' = rocket, uppercase = Other team	
 	
 	public MapNode(int x, int y, int karbonite, char contentTag, boolean passable) {
 		this.x = x;
@@ -31,6 +31,10 @@ public class MapNode {
 	
 	public void setKarbonite(int amount) {
 		this.karbonite = amount;
+	}
+	
+	public int getKarbonite() {
+		return this.karbonite;
 	}
 	
 	public void setTag(char newTag) {
