@@ -197,11 +197,24 @@ public class FalconMap {
 		return this.map[y][x].getTag();
 	}
 	
-	public void decreaseKarbonite(int x, int y, int amount) {
+	/**
+	 * Set the karbonite at the given node
+	 * @param x
+	 * @param y
+	 * @param amount
+	 * @param returnRemoveFlag Because this function affects the arraylist karboniteDeposits
+	 *                         it is sometimes neccessary to be careful and not remove the node
+	 *                         but rather return a flag that says it SHOULD be removed
+	 * @return toRemove flag. If returnRemoveFlag is false, output is always false
+	 */
+	public boolean decreaseKarbonite(int x, int y, int amount, boolean returnRemoveFlag) {
 		map[y][x].removeKarbonite(amount);
-		if (map[y][x].karbonite <= 0) {
+		if (!returnRemoveFlag && map[y][x].karbonite <= 0) {
 			this.karboniteDeposits.remove(this.map[y][x]);
+		} else if (returnRemoveFlag && map[y][x].karbonite <= 0) {
+			return true;
 		}
+		return false;
 	}
 	
 	/**
