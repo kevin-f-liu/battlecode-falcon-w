@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import bc.*;
@@ -93,7 +94,6 @@ public class FalconMap {
 		// Update unit tags every turn
 		Set<MapNode> modified = new HashSet<MapNode>();
 		Set<MapNode> original = new HashSet<MapNode>();
-		Set<MapNode> difference;
 		
 		boolean ally = true;
 		for (int i = 0; i < allUnits.size(); i++) {
@@ -120,7 +120,26 @@ public class FalconMap {
 	}
 	
 	public void updateKarbonite() {
-		
+		// This logic works on the assumption that no new karbonite is created. Thus, only on Earth
+		if (this.planet == Planet.Earth) {
+			ArrayList<MapNode> toRemove = new ArrayList<MapNode>();
+			for (MapNode node : this.karboniteDeposits) {
+				try {
+					int karbonite = (int) gc.karboniteAt(new MapLocation(this.planet, node.x, node.y));
+					if (this.setKarbonite(node.x, node.y, karbonite, true)) {// This handles removal from deposites list
+						toRemove.add(node);
+					}
+				} catch (RuntimeException ex) {
+					// Do nothing if karbonite outside vision range
+				}
+			}
+			// Now remove
+			for (MapNode node: toRemove) {
+				this.karboniteDeposits.remove(node);
+			}
+		} else {
+			// Mars Logic
+		}
 	}
 	
 	/**
@@ -185,11 +204,28 @@ public class FalconMap {
 		}
 	}
 	
-	public void setKarbonite(int x, int y, int amount) {
+	/**
+	 * Set the karbonite at the given node
+	 * @param x
+	 * @param y
+	 * @param amount
+	 * @param returnRemoveFlag Because this function affects the arraylist karboniteDeposits
+	 *                         it is sometimes neccessary to be careful and not remove the node
+	 *                         but rather return a flag that says it SHOULD be removed
+	 * @return toRemove flag. If returnRemoveFlag is false, output is always false
+	 */
+	public boolean setKarbonite(int x, int y, int amount, boolean returnRemoveFlag) {
 		map[y][x].setKarbonite(amount);
-		if (amount == 0) {
+		if (!returnRemoveFlag && amount == 0) {
 			this.karboniteDeposits.remove(this.map[y][x]);
+		} else if (returnRemoveFlag && amount == 0) {
+			return true;
 		}
+		return false;
+	}
+	
+	public int getKarbonite(int x, int y) {
+		return map[y][x].getKarbonite();
 	}
 	
 	public boolean isPassable(int x, int y) {
@@ -202,6 +238,37 @@ public class FalconMap {
 	
 	public boolean isOnMap(int x, int y) {
 		return x >= 0 && x < this.width && y >= 0 && y < this.height;
+	}
+	
+	/**
+	 * Do a search for the nearest karbonite
+	 */
+	public MapLocation searchForKarbonite(int centerX, int centerY) {
+		// Search by expanding rings
+		int maxRadius = (int) Math.max(Math.max(this.width - 1 - centerX, centerX), Math.max(this.height - 1 - centerY, centerY));
+			
+		for (int radius = 1; radius < maxRadius; radius++) {
+			// I hate how this is written
+			for (int x = centerX - radius; x <= centerX + radius; x += 2*radius) {
+				for (int y = centerY - radius; y < centerY + radius; y++) {
+					if (this.isOnMap(x, y) && map[y][x].getKarbonite() > 0) {
+						return new MapLocation(this.planet, x, y);
+//						return new int[] {x, y};
+					}
+				}
+			}
+			for (int y = centerY - radius; y <= centerY + radius; y += 2*radius) {
+				for (int x = centerX - radius; x < centerX + radius; x++) {
+					if (this.isOnMap(x, y) && map[y][x].getKarbonite() > 0) {
+						return new MapLocation(this.planet, x, y);
+//						return new int[] {x, y};
+					}
+				}
+			}
+		}
+		
+		// Nothing found. Just be careful when handling these return values
+		return null;
 	}
 	
 	/**

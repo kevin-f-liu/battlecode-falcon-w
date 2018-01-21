@@ -33,6 +33,10 @@ public class MapNode {
 		this.karbonite = amount;
 	}
 	
+	public int getKarbonite() {
+		return this.karbonite;
+	}
+	
 	public void setTag(char newTag) {
 		this.contentTag = newTag;
 	}

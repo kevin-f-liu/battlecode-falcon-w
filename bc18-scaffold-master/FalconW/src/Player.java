@@ -23,8 +23,9 @@ public class Player {
 	 * Takes every unit in vision range and update the map. Sensed here to reduce api calls and memory
 	 * @param units
 	 */
-	public static void updatePlayerUnits(FalconMap map, VecUnit units) {
+	public static void updateMap(FalconMap map, VecUnit units) {
 		 map.updateUnits(units);
+		 map.updateKarbonite();
 	}
 	
 	public static void main(String[] args) {
@@ -48,6 +49,9 @@ public class Player {
             
             // Get our Units and put them in a wrapper.
             VecUnit units = gc.myUnits();
+            // Update karbonite
+            updateMap(gameMap, units);
+            
             PlayerUnits myUnits = new PlayerUnits(units, OUR_TEAM);
             
             // Get Enemy Unit Locations.
@@ -91,7 +95,7 @@ public class Player {
             		// Find the nearest target if not mining
             		if (!mining) {
             			if (!pf.isTargeting()) {
-                			MapLocation target = gameMap.ringSearch(unitMapLocation.getX(), unitMapLocation.getY(), '1');
+                			MapLocation target = gameMap.searchForKarbonite(unitMapLocation.getX(), unitMapLocation.getY());
                 			System.out.println(unit.id() + ": new target: " + target);
                 			pf.updateMap(gameMap);
                 			pf.target(unitMapLocation.getX(), unitMapLocation.getY(), target.getX(), target.getY());
