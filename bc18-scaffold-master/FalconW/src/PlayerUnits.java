@@ -5,8 +5,9 @@ import bc.*;
 public class PlayerUnits {
 
 	private HashMap<Integer, Unit> allUnits, workers, knights, rangers, mages, healers, factories, rockets;
+	public Team team;
 
-	public PlayerUnits(VecUnit units) {
+	public PlayerUnits(VecUnit units, Team team) {
 		allUnits = new HashMap<Integer, Unit>();
 		workers = new HashMap<Integer, Unit>();
 		knights = new HashMap<Integer, Unit>();
@@ -15,6 +16,7 @@ public class PlayerUnits {
 		healers = new HashMap<Integer, Unit>();
 		factories = new HashMap<Integer, Unit>();
 		rockets = new HashMap<Integer, Unit>();
+		this.team = team;
 
 		for (int i = 0; i < units.size(); i++) {
 			Unit unit = units.get(i);
@@ -73,10 +75,11 @@ public class PlayerUnits {
 			}
 		}
 	}
+	
+	// Missing remove unit functions
 
 	public HashMap<Integer, Unit> getWorkers() {
 		return workers;
-
 	}
 
 	public void addWorker(Unit newWorker) {

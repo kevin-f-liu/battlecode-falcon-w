@@ -6,9 +6,6 @@ import java.util.HashMap;
 import bc.*;
 
 public class Player {	
-	
-	private static Team ENEMY_TEAM;
-
 	/**
 	 * Main method for decision making
 	 * foo() => Get data (Resource management, Macro decisions)
@@ -21,21 +18,27 @@ public class Player {
 	 * foo_n => endturn()
 	 * @param args
 	 */
+	
+	/**
+	 * Takes every unit in vision range and update the map. Sensed here to reduce api calls and memory
+	 * @param units
+	 */
+	public static void updatePlayerUnits(FalconMap map, VecUnit units) {
+		 map.updateUnits(units);
+	}
+	
 	public static void main(String[] args) {
         // Connect to the manager, starting the game
         GameController gc = new GameController();
-        // Fetch the map of the current planet and store it in an array
  		FalconMap gameMap = new FalconMap(gc);
- 		gameMap.printMap();
- 		gameMap.printContentMap();
- 		
+ 		Team OUR_TEAM = gc.team();
+ 		Team ENEMY_TEAM;
  		// Set ENEMY_TEAM constant: this is required for some implemented classes.
  		if (gc.team() == Team.Blue){
  			ENEMY_TEAM = Team.Red;
  		} else{
  			ENEMY_TEAM = Team.Blue;
  		}
- 		
  		
  		HashMap<Integer, PathFinder> pathFinders = new HashMap<Integer, PathFinder>();
  		CombatManeuver combatDecisions = new CombatManeuver();
@@ -45,7 +48,7 @@ public class Player {
             
             // Get our Units and put them in a wrapper.
             VecUnit units = gc.myUnits();
-            PlayerUnits myUnits = new PlayerUnits(units);
+            PlayerUnits myUnits = new PlayerUnits(units, OUR_TEAM);
             
             // Get Enemy Unit Locations.
             EnemyLocations enemies = new EnemyLocations(gc, ENEMY_TEAM);

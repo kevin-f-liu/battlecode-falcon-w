@@ -1,13 +1,19 @@
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Set;
 
 import bc.*;
 
 public class FalconMap {
+	public HashMap<UnitType, Character> unitLegend; // Stores the character for every unit
+	
 	public GameController gc;
 	public MapNode[][] map;
 	public HashMap<Character, ArrayList<MapNode>> nodeContentMap;
+	public ArrayList<MapNode> karboniteDeposits;
+	public ArrayList<MapNode> impassableTerrain;
 	
 	public int width;
 	public int height;
@@ -21,9 +27,22 @@ public class FalconMap {
 	
 	public FalconMap(GameController gcx) {
 		 this.gc = gcx;
-		 this.nodeContentMap = new HashMap<Character, ArrayList<MapNode>>();
-		 this.initMap(gcx);
 		 this.team = gcx.team();
+		 this.nodeContentMap = new HashMap<Character, ArrayList<MapNode>>();
+		 
+		 this.initUnitLegend();
+		 this.initMap(gcx);
+	}
+	
+	public void initUnitLegend() {
+		this.unitLegend = new HashMap<UnitType, Character>();
+		this.unitLegend.put(UnitType.Worker, 'w');
+		this.unitLegend.put(UnitType.Knight, 'k');
+		this.unitLegend.put(UnitType.Ranger, 'r');
+		this.unitLegend.put(UnitType.Mage, 'm');
+		this.unitLegend.put(UnitType.Healer, 'h');
+		this.unitLegend.put(UnitType.Factory, 'f');
+		this.unitLegend.put(UnitType.Rocket, 'r');
 	}
 	
 	public void initMap(GameController gc) {
@@ -33,6 +52,8 @@ public class FalconMap {
 		this.width = (int) m.getWidth();
 		this.height = (int) m.getHeight();
 		this.map = new MapNode[(int) height][(int) width];
+		this.karboniteDeposits = new ArrayList<MapNode>();
+		this.impassableTerrain = new ArrayList<MapNode>();
 		
 		char tag;
 		int karbonite;
@@ -45,6 +66,12 @@ public class FalconMap {
 				tag = '0'; // Default tag to nothing
 				MapNode node = new MapNode(j, i, karbonite, tag, (boolean) (m.isPassableTerrainAt(tmp) == 1));
 				map[i][j] = node;
+				if (m.isPassableTerrainAt(tmp) != 1) {
+					this.impassableTerrain.add(node);
+				}
+				if (karbonite > 0) {
+					this.karboniteDeposits.add(node);
+				}
 				this.updateNodeTag(j, i, tag); // Init the nodes in nodeContentMap
 			}
 		}
@@ -55,11 +82,45 @@ public class FalconMap {
 			int ux = u.location().mapLocation().getX();
 			int uy = u.location().mapLocation().getY();
 			if (u.team() == this.team) {
-				this.updateNodeTag(ux, uy, 'q');
+				this.updateNodeTag(ux, uy, 'w');
 			} else {
 				this.updateNodeTag(ux, uy, 'W');
 			}
 		}
+	}
+	
+	public void updateUnits(VecUnit allUnits) {
+		// Update unit tags every turn
+		Set<MapNode> modified = new HashSet<MapNode>();
+		Set<MapNode> original = new HashSet<MapNode>();
+		Set<MapNode> difference;
+		
+		boolean ally = true;
+		for (int i = 0; i < allUnits.size(); i++) {
+			Unit u = allUnits.get(i);
+			MapLocation unitLoc = u.location().mapLocation();
+			if (u.team() != this.team) ally = false;
+			
+			char unitTag = this.unitLegend.get(u.unitType());
+			this.updateNodeTag(unitLoc.getX(), unitLoc.getY(), ally ? unitTag : Character.toUpperCase(unitTag));
+			modified.add(this.get(unitLoc.getX(), unitLoc.getY()));
+		}
+		// Iterate through all the stored MapNodes in nodeContentMap, and add to orig set
+		for (Character tag : this.nodeContentMap.keySet()) {
+			ArrayList<MapNode> nodeList = this.nodeContentMap.get(tag);
+			for (MapNode node : nodeList) {
+				original.add(node);
+			}
+		}
+		original.removeAll(modified); // Get the difference between the original and the modified nodes
+		for (MapNode node : original) {
+			// Every Node here has had the unit destroyed.
+			this.removeNodeTag(node.x, node.y);
+		}
+	}
+	
+	public void updateKarbonite() {
+		
 	}
 	
 	/**
@@ -73,7 +134,6 @@ public class FalconMap {
 		// Get the node first
 		MapNode node = map[y][x];
 		char oldTag = node.getTag();
-		node.setTag(newTag);
 		if (nodeContentMap.containsKey(oldTag)) {
 			// Remove 
 			nodeContentMap.get(oldTag).remove(node);
@@ -86,7 +146,18 @@ public class FalconMap {
 			nodeList.add(node);
 			nodeContentMap.put(newTag, nodeList);
 		}
-		
+		node.setTag(newTag);
+	}
+	
+	public void removeNodeTag(int x, int y) {
+		// Get the node first
+		MapNode node = map[y][x];
+		char oldTag = node.getTag();
+		if (nodeContentMap.containsKey(oldTag)) {
+			// Remove from map
+			nodeContentMap.get(oldTag).remove(node);
+		}
+		node.setTag('0'); // Set to blank
 	}
 	
 	public Planet getPlanet() {
@@ -109,10 +180,16 @@ public class FalconMap {
 	
 	public void decreaseKarbonite(int x, int y, int amount) {
 		map[y][x].removeKarbonite(amount);
+		if (map[y][x].karbonite <= 0) {
+			this.karboniteDeposits.remove(this.map[y][x]);
+		}
 	}
 	
 	public void setKarbonite(int x, int y, int amount) {
 		map[y][x].setKarbonite(amount);
+		if (amount == 0) {
+			this.karboniteDeposits.remove(this.map[y][x]);
+		}
 	}
 	
 	public boolean isPassable(int x, int y) {
