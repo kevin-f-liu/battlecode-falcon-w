@@ -18,7 +18,7 @@ public class EnemyLocations {
 		MapLocation loc = new MapLocation(gc.planet(), 0, 0);
 		ENEMY_TEAM = enemyTeam;
 		VecUnit enemyUnits = gc.senseNearbyUnitsByTeam(loc, Integer.MAX_VALUE, enemyTeam);
-		enemies = new PlayerUnits(enemyUnits);
+		enemies = new PlayerUnits(enemyUnits, ENEMY_TEAM);
 		
 	}
 	

@@ -12,8 +12,8 @@ public class PathFinder {
 		public double hCost = 0;
 		public double fCost = 0;
 		
-		public AStarNode(int x, int y, char content, boolean walkable) {
-			super(x, y, 0, content, walkable);
+		public AStarNode(int x, int y, int karbonite, char content, boolean walkable) {
+			super(x, y, karbonite, content, walkable);
 
 			this.parentNode = null;
 			this.nextNode = null;
@@ -61,7 +61,7 @@ public class PathFinder {
 		this.map = new AStarNode[height][width];
 		for (int i = 0; i < this.height; i++) {
 			for (int j = 0; j < this.width; j++) {
-				this.map[i][j] = new AStarNode(j, i, map.get(j, i).getTag(), map.isPassable(j, i));
+				this.map[i][j] = new AStarNode(j, i, map.get(j, i).getKarbonite(), map.get(j, i).getTag(), map.isPassable(j, i));
 			}
 		}
 	}
@@ -72,6 +72,7 @@ public class PathFinder {
 			for (int j = 0; j < this.width; j++) {
 				this.map[i][j].setPassable(map.isPassable(j, i));
 				this.map[i][j].setTag(map.get(j, i).getTag());
+				this.map[i][j].setKarbonite(map.getKarbonite(j, i));
 				this.map[i][j].resetCosts();
 			}
 		}
