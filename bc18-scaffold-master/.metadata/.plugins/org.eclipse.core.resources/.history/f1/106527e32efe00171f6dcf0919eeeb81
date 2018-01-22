@@ -101,9 +101,7 @@ public class Player {
 
         while (true) {
             System.out.println("Current round: "+gc.round());
-           
-            // Update new units.
-           units = gc.myUnits();
+            
            myUnits.checkNewUnits(units);
             
             // Get Enemy Unit Locations.

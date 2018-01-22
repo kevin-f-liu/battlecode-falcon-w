@@ -102,7 +102,7 @@ public class Player {
         while (true) {
             System.out.println("Current round: "+gc.round());
            
-            // Update new units.
+            // Update new units;
            units = gc.myUnits();
            myUnits.checkNewUnits(units);
             

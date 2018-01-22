@@ -53,8 +53,7 @@ public class CombatManeuver {
 
 	/**
 	 * Method that returns the best target to attack within the attackable
-	 * units. 
-	 * (Target selection)
+	 * units.
 	 * 
 	 * @return Best possible unit to attack, false otherwise.
 	 */
