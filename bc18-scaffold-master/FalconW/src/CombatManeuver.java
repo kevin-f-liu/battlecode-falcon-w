@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedList;
 
 import bc.*;
 
@@ -56,7 +58,7 @@ public class CombatManeuver {
 	 * units. 
 	 * (Target selection)
 	 * 
-	 * @return Best possible unit to attack, false otherwise.
+	 * @return Best possible unit to attack, null otherwise.
 	 */
 	public Unit targetSelection(GameController gc, Unit unit, Team enemyTeam) {
 
@@ -95,12 +97,103 @@ public class CombatManeuver {
 		return null;
 	}
 
-	public void setDefensiveMode(Unit unit, GameController gc) {
+	/**
+	 * Method that finds a target and move towards it. This method looks for the
+	 * closest enemy target using BFS.
+	 * 
+	 * @param unit
+	 * @param gc
+	 */
+	public MapLocation seekTarget(Unit unit, FalconMap map, Team enemyTeam, PathFinder pf, GameController gc) {
 
-	}
+		// Get list of enemy Units
+		//PlayerUnits enemies = enemyLoc.getEnemyUnits();
+		//HashMap<Integer, Unit> enemyUnits = enemies.getAllUnits();
+		//Team enemyTeam = enemyUnits.values().iterator().next().team();
 
-	public void setAgressiveMode(Unit unit, GameController gc) {
+		// Get Current Unit attack range
+		Long atkRange = unit.attackRange();
+		Long rangeConstraint = (long) 0;
+		if (unit.unitType() == UnitType.Ranger) {
+			rangeConstraint = unit.rangerCannotAttackRange();
+		}
 
+		// Use BFS to find nearest enemy unit to this unit.
+		boolean visited[][] = new boolean[map.width][map.height];
+		LinkedList<MapLocation> queue = new LinkedList<MapLocation>();
+
+		queue.push(unit.location().mapLocation());
+		visited[unit.location().mapLocation().getX()][unit.location().mapLocation().getY()] = true;
+
+		while (queue.size() != 0) {
+			MapLocation current = queue.pop();
+
+			// Check if an enemyUnit is at this MapLocation, while also
+			// accounting for the attack range of this Unit.
+			// gc.senseUnitAtLocation(current);
+			VecUnit attackableUnitsAtLocation = gc.senseNearbyUnitsByTeam(current, atkRange, enemyTeam);
+			if (attackableUnitsAtLocation.size() != 0) {
+				for (int i = 0; i < attackableUnitsAtLocation.size(); i++){
+					Unit curr = attackableUnitsAtLocation.get(i);
+					
+					// Ensure that this unit falls within attack range constraints. 
+					if (curr.location().mapLocation().distanceSquaredTo(current) >= rangeConstraint){
+						return current;
+					}
+				
+				}
+			}
+
+			// Otherwise, push all adjacent nodes into the BFS.
+			MapLocation adjNorth, adjSouth, adjEast, adjWest, adjNE, adjNW, adjSE, adjSW;
+			adjNorth = current.add(Direction.North);
+			adjSouth = current.add(Direction.South);
+			adjEast = current.add(Direction.East);
+			adjWest = current.add(Direction.West);
+			
+			adjNE = current.add(Direction.Northeast);
+			adjNW = current.add(Direction.Northwest);
+			adjSE = current.add(Direction.Southeast);
+			adjSW = current.add(Direction.Southwest);
+			
+			if (visited[adjNorth.getX()][adjNorth.getY()] != true) {
+				visited[adjNorth.getX()][adjNorth.getY()] = true;
+				queue.push(adjNorth);
+			}
+			if (visited[adjSouth.getX()][adjSouth.getY()] != true) {
+				visited[adjSouth.getX()][adjSouth.getY()] = true;
+				queue.push(adjSouth);
+			}
+			if (visited[adjEast.getX()][adjEast.getY()] != true) {
+				visited[adjEast.getX()][adjEast.getY()] = true;
+				queue.push(adjEast);
+			}
+			if (visited[adjWest.getX()][adjWest.getY()] != true) {
+				visited[adjWest.getX()][adjWest.getY()] = true;
+				queue.push(adjWest);
+			}
+			
+			if (visited[adjNE.getX()][adjNE.getY()] != true) {
+				visited[adjNE.getX()][adjNE.getY()] = true;
+				queue.push(adjNE);
+			}
+			if (visited[adjNW.getX()][adjNW.getY()] != true) {
+				visited[adjNW.getX()][adjNW.getY()] = true;
+				queue.push(adjNW);
+			}
+			if (visited[adjSE.getX()][adjSE.getY()] != true) {
+				visited[adjSE.getX()][adjSE.getY()] = true;
+				queue.push(adjSE);
+			}
+			if (visited[adjSW.getX()][adjSW.getY()] != true) {
+				visited[adjSW.getX()][adjSW.getY()] = true;
+				queue.push(adjSW);
+			}
+
+		}
+
+		// No valid target location exists
+		return null;
 	}
 
 }

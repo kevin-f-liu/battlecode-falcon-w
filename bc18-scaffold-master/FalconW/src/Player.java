@@ -43,16 +43,21 @@ public class Player {
  		
  		HashMap<Integer, PathFinder> pathFinders = new HashMap<Integer, PathFinder>();
  		CombatManeuver combatDecisions = new CombatManeuver();
+ 		
+ 		  // Get our Units and put them in a wrapper.
+ 		 VecUnit units = gc.myUnits();
+ 		 PlayerUnits myUnits = new PlayerUnits(units, OUR_TEAM);
 
         while (true) {
             System.out.println("Current round: "+gc.round());
-            
-            // Get our Units and put them in a wrapper.
-            VecUnit units = gc.myUnits();
+     
             // Update karbonite
             updateMap(gameMap, units);
             
-            PlayerUnits myUnits = new PlayerUnits(units, OUR_TEAM);
+           // Update Units
+            units = gc.myUnits();
+            myUnits.checkNewUnits(units);
+            
             
             // Get Enemy Unit Locations.
             EnemyLocations enemies = new EnemyLocations(gc, ENEMY_TEAM);
@@ -120,7 +125,60 @@ public class Player {
              */
             //Update PowerScores for combat decision making
             int[] powerScores = combatDecisions.updatePowerScore(myUnits, enemies);
-            
+           
+            /**
+             *  Decision Making for Rangers
+             */
+            HashMap<Integer, Unit> rangers = myUnits.getRangers();
+            for (Unit ranger: rangers.values()){
+            	MapLocation unitMapLocation = ranger.location().mapLocation();
+            	// Get Unit's Pathfinder.
+            	PathFinder pf;
+        		if (!pathFinders.containsKey(new Integer(ranger.id()))) {
+        			// Add to map if new unit
+        			System.out.println(ranger.id() + ": new pathfinder");
+        			pf = new PathFinder(gameMap);
+        			pathFinders.put(ranger.id(), pf);
+        		} else {
+        			pf = pathFinders.get(ranger.id());
+        		}
+        		
+        		System.out.println("Ranger " + ranger.id() + ": now at " + unitMapLocation);
+        		
+        		// See if the ranger can attack, if so, attack.
+        		Unit target = combatDecisions.targetSelection(gc, ranger, ENEMY_TEAM);
+        		if (target != null){
+        			if (gc.canAttack(ranger.id(), target.id())){
+        				gc.attack(ranger.id(), target.id());
+        			}
+        		}
+        		
+        		// Otherwise, seek enemy target and march towards it.
+        		if (!pf.isTargeting()) {
+        			MapLocation targetLoc = combatDecisions.seekTarget(ranger, gameMap, ENEMY_TEAM, pf, gc);
+        			System.out.println("Ranger " + ranger.id() + ": new target location: " + target);
+        			pf.updateMap(gameMap);
+        			pf.target(unitMapLocation.getX(), unitMapLocation.getY(), targetLoc.getX(), targetLoc.getY());
+        			pf.printPath(ranger.id()); // Print the path for debugging
+        		}
+    			
+    			Direction next = pf.nextStep();
+    			System.out.println("Ranger " + ranger.id() + ": move direction " + next);
+    			if (next != null && gc.isMoveReady(ranger.id()) && gc.canMove(ranger.id(), next)) {
+    				gc.moveRobot(ranger.id(), next);
+    				pf.advanceStep();
+        			System.out.println("Ranger " + ranger.id() + ": moved to " + gc.unit(ranger.id()).location().mapLocation());
+    			}
+    			
+    			// See if the ranger can attack again, if so, attempt to attack again.
+        		target = combatDecisions.targetSelection(gc, ranger, ENEMY_TEAM);
+        		if (target != null){
+        			if (gc.canAttack(ranger.id(), target.id())){
+        				gc.attack(ranger.id(), target.id());
+        			}
+        		}
+  
+            }
             
             
             
