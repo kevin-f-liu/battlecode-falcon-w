@@ -16,6 +16,7 @@ public class FalconMap {
 	public MapNode[][] map;
 	public HashMap<Character, ArrayList<MapNode>> nodeContentMap;
 	public ArrayList<MapNode> karboniteDeposits;
+	public ArrayList<ArrayList<MapNode>> karboniteBlobs;
 	public ArrayList<MapNode> impassableTerrain;
 	
 	public int width;
@@ -93,6 +94,9 @@ public class FalconMap {
 				this.updateNodeTag(ux, uy, 'W');
 			}
 		}
+		
+		// Do preprocessing on karbonite
+		this.initKarboniteBlobs();
 	}
 	
 	public void updateUnits(VecUnit allUnits) {
@@ -107,7 +111,7 @@ public class FalconMap {
 			if (u.team() != this.team) ally = false;
 			
 			char unitTag = this.unitLegend.get(u.unitType());
-			this.updateNodeTag(unitLoc.getX(), unitLoc.getY(), ally ? unitTag : Character.toUpperCase(unitTag));
+			this.updateNodeTag(unitLoc.getX(), unitLoc.getY(), ally ? unitTag : Character.toUpperCase(unitTag)); // Handles nodeContentMap updates
 			modified.add(this.get(unitLoc.getX(), unitLoc.getY()));
 		}
 		// Iterate through all the stored MapNodes in nodeContentMap, and add to orig set
@@ -119,7 +123,7 @@ public class FalconMap {
 		}
 		original.removeAll(modified); // Get the difference between the original and the modified nodes
 		for (MapNode node : original) {
-			// Every Node here has had the unit destroyed.
+			// Every Node here has had the unit destroyed or moved
 			this.removeNodeTag(node.x, node.y);
 		}
 	}
@@ -171,6 +175,7 @@ public class FalconMap {
 			nodeContentMap.put(newTag, nodeList);
 		}
 		node.setTag(newTag);
+		node.setPassable(false);
 	}
 	
 	public void removeNodeTag(int x, int y) {
@@ -182,6 +187,7 @@ public class FalconMap {
 			nodeContentMap.get(oldTag).remove(node);
 		}
 		node.setTag('0'); // Set to blank
+		node.setPassable(true);
 	}
 	
 	public Planet getPlanet() {
@@ -289,68 +295,72 @@ public class FalconMap {
 		return null;
 	}
 	
-	public ArrayList<ArrayList<int[]>> karboniteBlobs() {
+	/**
+	 * Does a BFS to first create groupings of karbonite, then orders them based on an important heuristic
+	 * Score = (1 - n1 / nt) * k / a
+	 * n1 = Number of nodes with 2 non orthogonal neighbours + Number with 1 neighbour 
+	 * nt = Total Nodes
+	 * k = total karbonite
+	 * a = area of a circumscribing rectangle
+	 */
+	public void initKarboniteBlobs() {
 		ArrayList<MapNode> visited = new ArrayList<MapNode>();
 		ArrayDeque<MapNode> unvisited = new ArrayDeque<MapNode>();
 
-		ArrayList<ArrayList<int[]>> blobs = new ArrayList<ArrayList<int[]>>();
-		ArrayList<int[]> blob = new ArrayList<int[]>();
-		int count = 0;
-		int blobcount = 0;
+		ArrayList<ArrayList<MapNode>> blobs = new ArrayList<ArrayList<MapNode>>();
+		ArrayList<Double> blobScores = new ArrayList<Double>();
+		ArrayList<MapNode> blob = new ArrayList<MapNode>();
+		int maxx, maxy, minx, miny, numSparseNodes, numNeighbours, totalKarbonite; // For efficiency
 		for (MapNode node : this.karboniteDeposits) {
-			count++;
-			System.out.println(count);
+			// Start of a new blob
 			if (!visited.contains(node)) {
-				blobcount ++;
-				System.out.println("BC: " + blobcount);
-				blob = new ArrayList<int[]>();
+				blob = new ArrayList<MapNode>();
 				unvisited.clear();
 				unvisited.add(node);
+				
+				maxx = node.x;
+				minx = node.x;
+				maxy = node.y;
+				miny = node.y;
+				
+				numSparseNodes = 0;
+				totalKarbonite = 0;
+				
 				while (!unvisited.isEmpty()) {
 					MapNode n = unvisited.removeFirst();
-
+					totalKarbonite += n.getKarbonite();
+					if (n.x < minx) minx = n.x;
+					else if (n.x > maxx) maxx = n.x;
+					if (n.y < miny) miny = n.y;
+					else if (n.y > maxy) maxy = n.y;
 					visited.add(n);
-					blob.add(new int[] {n.x, n.y});
+					blob.add(n);
+					numNeighbours = 0;
 					for (MapNode neighbour : this.karboniteDeposits) {
+						// Karbonite within 1 move of another is considered the same blob
 						if (!visited.contains(neighbour) && neighbour != n && Math.abs(neighbour.x - n.x) <= 1 && Math.abs(neighbour.y - n.y) <= 1) {
+							numNeighbours++;
 							unvisited.push(neighbour);
 						}
 					}
+					
+					if (numNeighbours == 1 || numNeighbours == 2) {
+						numSparseNodes++;
+					}
 				}
-				blobs.add(blob);
+				double score = (1.0 - (double) numSparseNodes / blob.size()) * totalKarbonite / ((maxx - minx + 1) * (maxy - miny + 1));
+				// Insert in descending order
+				int i = 0;
+				try {
+					while (blobScores.get(i) > score) i++;
+				} catch (IndexOutOfBoundsException ex) {}
+				blobs.add(i, blob);
+				blobScores.add(i, score);
 			}
 		}
 		
-		return blobs;
+		this.karboniteBlobs = blobs;
 	}
-	
-//	public ArrayList<ArrayList<MapLocation>> karboniteBlobs() {
-//		ArrayList<MapNode> visited = new ArrayList<MapNode>();
-//		ArrayDeque<MapNode> unvisited = new ArrayDeque<MapNode>();
-//
-//		ArrayList<ArrayList<MapLocation>> blobs = new ArrayList<ArrayList<MapLocation>>();
-//		ArrayList<MapLocation> blob = new ArrayList<MapLocation>();
-//		for (MapNode node : this.karboniteDeposits) {
-//			if (!visited.contains(node)) {
-//				blob.clear();
-//				unvisited.clear();
-//				unvisited.add(node);
-//				while (!unvisited.isEmpty()) {
-//					MapNode n = unvisited.removeFirst();
-//					visited.add(n);
-//					blob.add(new MapLocation(this.planet, n.x, n.y));
-//					for (MapNode neighbour : this.karboniteDeposits) {
-//						if (neighbour != n && neighbour.x - n.x <= 1 && neighbour.y - n.y <= 1) {
-//							unvisited.addLast(neighbour);
-//						}
-//					}
-//				}
-//				blobs.add(blob);
-//			}
-//		}
-//		
-//		return blobs;
-//	}
 	
 	/**
 	 * Do a search for the nearest mapnode with contentTag matching targetChar

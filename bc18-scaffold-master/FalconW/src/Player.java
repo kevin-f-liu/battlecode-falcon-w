@@ -26,8 +26,6 @@ public class Player {
 	public static void updateMap(FalconMap map, VecUnit units) {
 		 map.updateUnits(units);
 		 map.updateKarbonite();
-		 System.out.println(map.karboniteBlobs());
-		 
 	}
 	
 	public static void main(String[] args) {
@@ -105,6 +103,7 @@ public class Player {
                 		}
             			
             			// Move the unit if it didn't mine, either new target or old
+//            			pf.recalculate(gameMap);
             			Direction next = pf.nextStep();
             			System.out.println(unit.id() + ": move direction " + next);
             			if (next != null && gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), next)) {
@@ -127,7 +126,7 @@ public class Player {
             
             
             
-           
+            System.gc();
             gc.nextTurn();
         }
     }
