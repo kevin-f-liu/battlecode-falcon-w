@@ -109,35 +109,35 @@ public class Player {
             		}
             		
             		if (rm.isBuildingStructure(unit)) {
-            			System.out.println(unit.id() + " is building structure");
+            			System.out.println(unit.id() + " assigned to BUILD structure");
             			// Not reached destination yet
             			if (pf.isTargeting()) {
             				 // Move
-            				System.out.println(unit.id() + " isTargeting");
                 			 Direction next = pf.nextStep();
                 			 if (next != null && gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), next)) {
                 			  	gc.moveRobot(unit.id(), next);
                 				pf.advanceStep();
-                    			System.out.println(unit.id() + ": TARGETING STRUCTURE, moved to " + gc.unit(unit.id()).location().mapLocation());
                 			 }
             			}
             			// Reached destination but have not blueprinted
             			else if (rm.isSavingForStructure()) {
-            				System.out.println(unit.id() + "reached destination for structure " + gc.unit(unit.id()).location().mapLocation());
+            				System.out.println(unit.id() + "reached destination for structure, blueprinting " + gc.unit(unit.id()).location().mapLocation());
             				rm.blueprintFactory(unit);
             			}
             			// Build complete
-            			else if (rm.getCurrentStructure().health() == rm.getCurrentStructure().maxHealth()) {
+            			else if (rm.getCurrentStructure().structureIsBuilt() > 0) {
             				rm.completeStructure();
+            				System.out.println("Structure completed");
                 		}
             			// Blueprinted but not build
             			else {
-            				System.out.print(unit.id() + ": building factory");
+            				System.out.print(unit.id() + " building factory");
             				rm.buildFactory(unit, factoryLocation);
             			}
 
             		}
             		else {
+            			System.out.println(unit.id() + " assigned to MINE");
 		        		// See if the worker is standing on karbonite that is is supposed to mine, if it is, mine it
 		        		boolean mining = false;
 		        		System.out.println(unit.id() + ": Standing on " + gc.karboniteAt(unitMapLocation) + "k");

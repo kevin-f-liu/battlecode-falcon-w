@@ -79,9 +79,6 @@ public class ResourceManagement {
 		if (this.workersForStructure > 0 ) {
 			this.workersForStructure--;
 		}
-		else {
-			structureQueued = false;
-		}
 	}
 	
 	/**
@@ -271,7 +268,6 @@ public class ResourceManagement {
 	public void buildFactory(Unit worker, MapLocation target) {
 		Unit blueprint = currentStructure;
 		if (gc.canBuild(worker.id(), blueprint.id())) {
-			System.out.println("Unit " + worker.id() + " building blueprint");
 			gc.build(worker.id(), blueprint.id());
 			System.out.println("worker " + worker.id() + " building blueprint");
 		}
