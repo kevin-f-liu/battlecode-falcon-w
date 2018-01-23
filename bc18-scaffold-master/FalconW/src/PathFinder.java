@@ -40,16 +40,21 @@ public class PathFinder {
 	public int endx;
 	public int endy;
 	public boolean targeting;
+	public boolean targetingStructure;
 	public AStarNode current;
 
 	private ArrayList<AStarNode> closedSet;
 	private ArrayList<AStarNode> openSet;
 	public ArrayList<AStarNode> path;
 	
+	public PathFinder() {
+	}
+	
 	public PathFinder(FalconMap map) {
 		this.height = map.height;
 		this.width = map.width;
 		this.targeting = false;
+		this.targetingStructure = false;
 		this.closedSet = new ArrayList<AStarNode>();
 		this.openSet = new ArrayList<AStarNode>();
 		this.planet = map.getPlanet();
@@ -138,6 +143,10 @@ public class PathFinder {
 	
 	public boolean isTargeting() {
 		return this.targeting;
+	}
+	
+	public boolean isTargetingStructure() {
+		return this.targetingStructure;
 	}
 	
 	public void advanceStep() {

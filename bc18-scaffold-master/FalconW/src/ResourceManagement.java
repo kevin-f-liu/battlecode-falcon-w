@@ -10,13 +10,21 @@ public class ResourceManagement {
 	private HashMap<Integer, Unit> workers;
 	private HashMap<Integer, Unit> factories;
 	private HashMap<Integer, Unit> rockets;
-	private boolean blueprinting;
+	
+	public static final int NUM_WORKERS_FOR_STRUCTURE = 4;
+	public static final int COMBAT_KARBONITE_PERCENT = 50;
+	private boolean structureQueued;
+	private int workersForStructure;
+	private MapLocation[] targetSquaresAroundStructure;
+	private boolean savingForStructure;
+	private int karboniteToSave;
+	private int karboniteForCombat;
 	
 	public ResourceManagement(GameController gc, 
 			FalconMap gameMap,
 			HashMap<Integer, Unit> workers,
 			HashMap<Integer, Unit> factories,
-			HashMap<Integer, Unit> rockets){
+			HashMap<Integer, Unit> rockets) {
 		this.gc = gc;
 		this.gameMap = gameMap;
 		this.workers = workers;
@@ -25,12 +33,70 @@ public class ResourceManagement {
 	}
 	
 	/**
-	 * Checks if blueprinting is in queue
+	 * Checks if structure is in queue
 	 * 
-	 * @return True if unit has intention to blueprint, false otherwise.
+	 * @return True if structure is needed, false otherwise.
 	 */
-	public boolean isBlueprinting() {
-		return blueprinting;
+	public boolean structureQueued() {
+		return this.structureQueued;
+	}
+	
+	/**
+	 * Gets the number of workers needed to build structure
+	 * 
+	 * @return The number of workers required
+	 */
+	public int workersForStructure() {
+		return this.workersForStructure;
+	}
+	
+	/**
+	 * Decreases workersForStructure by 1
+	 */
+	public void decreaseWorkersForStructure() {
+		if (this.workersForStructure > 0 ) {
+			this.workersForStructure--;
+		}
+		else {
+			this.structureQueued = false;
+		}
+	}
+	
+	/**
+	 * Gets the target squares to which workers should be directed
+	 * to build factory
+	 * 
+	 * @return Array of MapLocation of free adjacent squares to target location
+	 */
+	public MapLocation[] getSquaresAroundStructure() {
+		return this.targetSquaresAroundStructure;
+	}
+	
+	/**
+	 * Checks if currently saving up karbonite to build structure
+	 * 
+	 * @return True if saving, false otherwise.
+	 */
+	public boolean isSavingForStructure() {
+		return this.savingForStructure;
+	}
+	
+	/**
+	 * Gets the number of karbonite to save up to build future structure
+	 * 
+	 * @return Karbonite required
+	 */
+	public int karboniteToSave() {
+		return this.karboniteToSave;
+	}
+	
+	/**
+	 * Gets the maximum amount of karbonite to be used for combat
+	 * 
+	 * @return Amount of karbonite allowed
+	 */
+	public int karboniteForCombat() {
+		return (savingForStructure ? 0 : (int)gc.karbonite() * COMBAT_KARBONITE_PERCENT / 100);
 	}
 	
 	/**
@@ -51,6 +117,7 @@ public class ResourceManagement {
 					// Check if direction is valid
 					if (gc.canReplicate(w.id(), dir)) {
 						gc.replicate(w.id(), dir);
+						System.out.println("REPLICATED");
 						workersToReplicate--;
 						if (workersToReplicate < 1) {
 							return;
@@ -111,19 +178,78 @@ public class ResourceManagement {
 	}
 	
 	/**
-	 * Blueprint a factory at targeted MapLocation
+	 * Direct workers to build a factory at targeted MapLocation
 	 * 
-	 * @param Requested unit
-	 * @param Unit's PathFinder
 	 * @param Requested MapLocation
 	 */
-	public void blueprintFactory(Unit unit, PathFinder pf, MapLocation target) {
-    	int x = unit.location().mapLocation().getX();
-    	int y = unit.location().mapLocation().getY();
-    	MapLocation adjSquare = null;
-    
-    	// algorithm tbd
-    	
+	public void startFactoryBuild(MapLocation target) {
+		this.workersForStructure = NUM_WORKERS_FOR_STRUCTURE;
+    	this.structureQueued = true;
+    	this.targetSquaresAroundStructure = getFreeAdjSquares(target, NUM_WORKERS_FOR_STRUCTURE);
+    	this.savingForStructure = true;
+    	this.karboniteToSave = (int) bc.bcUnitTypeBlueprintCost(UnitType.Factory);
+	}
+	
+	/**
+	 * Direct worker to blueprint factory
+	 * 
+	 * @param Worker 
+	 * @param Requested MapLocation
+	 */
+	public void blueprintFactory(Unit worker, MapLocation target) {
+		Direction dir = target.directionTo(worker.location().mapLocation());
+		if (gc.canBlueprint(worker.id(), UnitType.Factory, dir)) {
+			gc.blueprint(worker.id(), UnitType.Factory, dir);
+	    	this.savingForStructure = false;
+	    	this.karboniteToSave = 0;
+		}
+	}
+	
+	/**
+	 * Direct worker to build blueprint
+	 * 
+	 * @param Worker 
+	 * @param MapLocation of Factory
+	 */
+	public void buildFactory(Unit worker, MapLocation target) {
+		Unit blueprint = gc.senseUnitAtLocation(target);
+		if (gc.canBuild(worker.id(), blueprint.id())) {
+			gc.build(worker.id(), blueprint.id());
+		}
+	}
+	
+	/**
+	 * Gets free adjacent squares to target MapLocation
+	 * 
+	 * @param Requested MapLocation
+	 * @param Number of squares needed
+	 * 
+	 * @return MapLocation array of adjacent squares
+	 */
+	public MapLocation[] getFreeAdjSquares(MapLocation target, int numSquares) {
+		MapLocation[] freeAdjSquares = new MapLocation[numSquares];
+		int index = 0;
+		
+		for (Direction dir : Direction.values()) {
+			int adjX = target.add(dir).getX();
+			int adjY = target.add(dir).getY();
+			
+			if (dir != Direction.Center && gameMap.isOnMap(adjX, adjY) && gameMap.isPassable(adjX, adjY)) {
+				freeAdjSquares[index] = target.add(dir);
+				index++;
+			}
+			
+			if (index >= freeAdjSquares.length) {
+				return freeAdjSquares;
+			}
+		}
+		
+		while (index < freeAdjSquares.length) {
+			freeAdjSquares[index] = null;
+			index++;
+		}
+		
+		return freeAdjSquares;
 	}
 	
 	/**

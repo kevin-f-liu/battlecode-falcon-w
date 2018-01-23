@@ -58,11 +58,33 @@ public class Player {
             units = gc.myUnits();
             myUnits.checkNewUnits(units);
             
-            
             // Get Enemy Unit Locations.
             EnemyLocations enemies = new EnemyLocations(gc, ENEMY_TEAM);
 
             HashMap<Integer, Unit> workers = myUnits.getWorkers();
+            HashMap<Integer, Unit> factories = myUnits.getFactories();
+            HashMap<Integer, Unit> rockets = myUnits.getRockets();
+            MapLocation factoryLocation = null;
+
+            ResourceManagement rm = new ResourceManagement(gc, gameMap, workers, factories, rockets);
+            MapLocation[] workerLocationsForFactory = new MapLocation[ResourceManagement.NUM_WORKERS_FOR_STRUCTURE];
+            
+            System.out.println("workersRequired: " + rm.workersRequired());
+            
+            if (rm.workersRequired() > 0) {
+            	rm.replicate(rm.workersRequired());
+            }
+            
+            if (rm.factoriesRequired() > 0) {
+            	factoryLocation = rm.getOptimalFactoryLocation();
+            	rm.startFactoryBuild(factoryLocation);
+            	workerLocationsForFactory = rm.getSquaresAroundStructure();
+            	System.out.println("factoryLocation" + factoryLocation.getX() + ", " + factoryLocation.getY());
+            	for (int i = 0; i < workerLocationsForFactory.length; i++) {
+            		System.out.println("workerLocationsForFactory: " + workerLocationsForFactory[i].getX() + ", " + workerLocationsForFactory[i].getY());
+            	}
+            }
+
             for (Unit unit: workers.values()) {
 				MapLocation unitMapLocation = unit.location().mapLocation();
 				/**
@@ -82,42 +104,84 @@ public class Player {
             		
             		System.out.println(unit.id() + ": now at " + unitMapLocation);
             		
-            		// See if the worker is standing on karbonite that is is supposed to mine, if it is, mine it
-            		boolean mining = false;
-            		System.out.println(unit.id() + ": Standing on " + gc.karboniteAt(unitMapLocation) + "k");
-            		if (gc.karboniteAt(unitMapLocation) > 0 && unitMapLocation.equals(pf.getTarget())) {
-            			System.out.println(unit.id() + ": Mining karbonite | " + gc.karboniteAt(unitMapLocation));
-            			mining = true;
-            			gc.harvest(unit.id(), Direction.Center);
-            		} else if (unitMapLocation.equals(pf.getTarget())){
-            			// target is correct but it ran out
-            			if (gameMap.get(unitMapLocation.getX(), unitMapLocation.getY()).getTag() == '1') {
-            				System.out.println("Ran out of karbonite at " + unitMapLocation);
-            				gameMap.get(unitMapLocation.getX(), unitMapLocation.getY()).setTag('0'); // Clear the square
+            		if (rm.structureQueued() && rm.workersForStructure() > 0 && !pf.isTargetingStructure()) {
+            			
+            			MapLocation target = workerLocationsForFactory[ResourceManagement.NUM_WORKERS_FOR_STRUCTURE - rm.workersForStructure()];
+            			System.out.println(unit.id() + ": target " + target.getX() + ", " + target.getY());
+            			if (target != null) {
+            				// // Aim for target MapLocation
+            				// pf.updateMap(gameMap);
+            				// System.out.println("map updated");
+            				// pf.target(unitMapLocation.getX(), unitMapLocation.getY(), target.getX(), target.getY());
+            				// System.out.println("target complete");
+            				// pf.targetingStructure = true;
             			}
+            			rm.decreaseWorkersForStructure();
             		}
             		
-            		// Find the nearest target if not mining
-            		if (!mining) {
-            			if (!pf.isTargeting()) {
-                			MapLocation target = gameMap.searchForKarbonite(unitMapLocation.getX(), unitMapLocation.getY());
-                			System.out.println(unit.id() + ": new target: " + target);
-                			pf.updateMap(gameMap);
-                			pf.target(unitMapLocation.getX(), unitMapLocation.getY(), target.getX(), target.getY());
-                			pf.printPath(unit.id()); // Print the path for debugging
-                		}
-            			
-            			// Move the unit if it didn't mine, either new target or old
-            			Direction next = pf.nextStep();
-            			System.out.println(unit.id() + ": move direction " + next);
-            			if (next != null && gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), next)) {
-            				gc.moveRobot(unit.id(), next);
-            				pf.advanceStep();
-                			System.out.println(unit.id() + ": moved to " + gc.unit(unit.id()).location().mapLocation());
+            		if (pf.isTargetingStructure()) {
+            			// Not reached destination yet
+            			if (pf.isTargeting()) {
+            				// // Move
+                			// Direction next = pf.nextStep();
+                			// System.out.println(unit.id() + ": move direction " + next);
+                			// if (next != null && gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), next)) {
+                			//  	gc.moveRobot(unit.id(), next);
+                			//	    pf.advanceStep();
+                    		//	    System.out.println(unit.id() + ": moved to " + gc.unit(unit.id()).location().mapLocation());
+                			// }
             			}
+            			// Reached destination but have not blueprinted
+            			else if (rm.isSavingForStructure()) {
+            				rm.blueprintFactory(unit, factoryLocation);
+            			}
+            			// Blueprinted and build complete
+            			else if (gc.senseUnitAtLocation(factoryLocation).health() == gc.senseUnitAtLocation(factoryLocation).maxHealth()) {
+            				pf.targetingStructure = false;
+            			}
+            			// Blueprinted but not build
+            			else {
+            				rm.buildFactory(unit, factoryLocation);
+            			}
+
+            		}
+            		else {
+		        		// See if the worker is standing on karbonite that is is supposed to mine, if it is, mine it
+		        		boolean mining = false;
+		        		System.out.println(unit.id() + ": Standing on " + gc.karboniteAt(unitMapLocation) + "k");
+		        		if (gc.karboniteAt(unitMapLocation) > 0 && unitMapLocation.equals(pf.getTarget())) {
+		        			System.out.println(unit.id() + ": Mining karbonite | " + gc.karboniteAt(unitMapLocation));
+		        			mining = true;
+		        			gc.harvest(unit.id(), Direction.Center);
+		        		} else if (unitMapLocation.equals(pf.getTarget())){
+		        			// target is correct but it ran out
+		        			if (gameMap.get(unitMapLocation.getX(), unitMapLocation.getY()).getTag() == '1') {
+		        				System.out.println("Ran out of karbonite at " + unitMapLocation);
+		        				gameMap.get(unitMapLocation.getX(), unitMapLocation.getY()).setTag('0'); // Clear the square
+		        			}
+		        		}
+		        		
+		        		// Find the nearest target if not mining
+		        		if (!mining) {
+		        			if (!pf.isTargeting()) {
+		            			MapLocation target = gameMap.searchForKarbonite(unitMapLocation.getX(), unitMapLocation.getY());
+		            			System.out.println(unit.id() + ": new target: " + target);
+		            			pf.updateMap(gameMap);
+		            			pf.target(unitMapLocation.getX(), unitMapLocation.getY(), target.getX(), target.getY());
+		            			pf.printPath(unit.id()); // Print the path for debugging
+		            		}
+		        			
+		        			// Move the unit if it didn't mine, either new target or old
+		        			Direction next = pf.nextStep();
+		        			System.out.println(unit.id() + ": move direction " + next);
+		        			if (next != null && gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), next)) {
+		        				gc.moveRobot(unit.id(), next);
+		        				pf.advanceStep();
+		            			System.out.println(unit.id() + ": moved to " + gc.unit(unit.id()).location().mapLocation());
+		        			}
+		        		}
             		}
             	} 	
-            	
             }
             
             /**
