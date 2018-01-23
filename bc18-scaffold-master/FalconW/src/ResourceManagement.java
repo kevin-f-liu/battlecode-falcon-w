@@ -13,19 +13,32 @@ public class ResourceManagement {
 	
 	public static final int NUM_WORKERS_FOR_STRUCTURE = 4;
 	public static final int COMBAT_KARBONITE_PERCENT = 50;
-	private boolean structureQueued;
+	private static boolean structureQueued;
 	private int workersForStructure;
 	private MapLocation[] targetSquaresAroundStructure;
-	private boolean savingForStructure;
-	private int karboniteToSave;
-	private int karboniteForCombat;
+	private static Unit currentStructure;
+	private static MapLocation currentStructureLocation;
+	private static boolean savingForStructure;
+	private static int karboniteToSave;
+	private HashMap<Integer, Unit> buildingWorkers;
 	
-	public ResourceManagement(GameController gc, 
-			FalconMap gameMap,
+	public ResourceManagement(GameController gc) {
+		this.gc = gc;
+		buildingWorkers = new HashMap<Integer, Unit>();
+	}
+	
+	/**
+	 * Updates resource manager with current round info
+	 * 
+	 * @param Game map
+	 * @param worker units
+	 * @param factory units
+	 * @param rocket units
+	 */
+	public void updateRM(FalconMap gameMap,
 			HashMap<Integer, Unit> workers,
 			HashMap<Integer, Unit> factories,
 			HashMap<Integer, Unit> rockets) {
-		this.gc = gc;
 		this.gameMap = gameMap;
 		this.workers = workers;
 		this.factories = factories;
@@ -38,13 +51,22 @@ public class ResourceManagement {
 	 * @return True if structure is needed, false otherwise.
 	 */
 	public boolean structureQueued() {
-		return this.structureQueued;
+		return structureQueued;
 	}
 	
 	/**
-	 * Gets the number of workers needed to build structure
+	 * Gets the list of workers designated for structure building
 	 * 
-	 * @return The number of workers required
+	 * @return The list of workers to build structure
+	 */
+	public HashMap<Integer, Unit> getBuildingWorkers() {
+		return buildingWorkers;
+	}
+	
+	/**
+	 * Gets the number of additional workers needed to build structure
+	 * 
+	 * @return The number of additional workers required
 	 */
 	public int workersForStructure() {
 		return this.workersForStructure;
@@ -58,7 +80,7 @@ public class ResourceManagement {
 			this.workersForStructure--;
 		}
 		else {
-			this.structureQueued = false;
+			structureQueued = false;
 		}
 	}
 	
@@ -73,12 +95,44 @@ public class ResourceManagement {
 	}
 	
 	/**
+	 * Gets MapLocation of the structure that is currently in build
+	 * 
+	 * @return MapLocation of current structure in build
+	 */
+	public MapLocation getCurrentStructureLocation() {
+		return currentStructureLocation;
+	}
+	
+	/**
+	 * Gets the structure that is currently in build
+	 * 
+	 * @return Unit object of current structure in build
+	 */
+	public Unit getCurrentStructure() {
+		return currentStructure;
+	}
+	
+	/**
+	 * Sets currentStructure to be the structure that is currently in build
+	 */
+	private void setCurrentStructure() {
+		for (int i = 0; i < gc.myUnits().size(); i++) {
+			Unit curr = gc.myUnits().get(i);
+			if (curr.unitType() == UnitType.Factory || curr.unitType() == UnitType.Rocket) {
+				if (curr.structureIsBuilt() == 0)
+				currentStructure = curr;
+			}
+		}
+		System.out.println("Current structure in build: " + currentStructure);
+	}
+	
+	/**
 	 * Checks if currently saving up karbonite to build structure
 	 * 
 	 * @return True if saving, false otherwise.
 	 */
 	public boolean isSavingForStructure() {
-		return this.savingForStructure;
+		return savingForStructure;
 	}
 	
 	/**
@@ -87,7 +141,7 @@ public class ResourceManagement {
 	 * @return Karbonite required
 	 */
 	public int karboniteToSave() {
-		return this.karboniteToSave;
+		return karboniteToSave;
 	}
 	
 	/**
@@ -172,9 +226,8 @@ public class ResourceManagement {
 					return target;
 				}
 			}
-		}
-		
-		return null;			
+		}		
+		return null;
 	}
 	
 	/**
@@ -182,26 +235,30 @@ public class ResourceManagement {
 	 * 
 	 * @param Requested MapLocation
 	 */
-	public void startFactoryBuild(MapLocation target) {
+	public void startFactoryBuild() {
+		MapLocation target = getOptimalFactoryLocation();
+		currentStructureLocation = target;
 		this.workersForStructure = NUM_WORKERS_FOR_STRUCTURE;
-    	this.structureQueued = true;
+    	structureQueued = true;
     	this.targetSquaresAroundStructure = getFreeAdjSquares(target, NUM_WORKERS_FOR_STRUCTURE);
-    	this.savingForStructure = true;
-    	this.karboniteToSave = (int) bc.bcUnitTypeBlueprintCost(UnitType.Factory);
+    	savingForStructure = true;
+    	karboniteToSave = (int) bc.bcUnitTypeBlueprintCost(UnitType.Factory);
 	}
 	
 	/**
 	 * Direct worker to blueprint factory
 	 * 
 	 * @param Worker 
-	 * @param Requested MapLocation
 	 */
-	public void blueprintFactory(Unit worker, MapLocation target) {
-		Direction dir = target.directionTo(worker.location().mapLocation());
+	public void blueprintFactory(Unit worker) {
+		Direction dir = worker.location().mapLocation().directionTo(currentStructureLocation);
 		if (gc.canBlueprint(worker.id(), UnitType.Factory, dir)) {
 			gc.blueprint(worker.id(), UnitType.Factory, dir);
-	    	this.savingForStructure = false;
-	    	this.karboniteToSave = 0;
+			savingForStructure = false;
+	    	karboniteToSave = 0;
+	    	System.out.println("Blueprint complete at " + currentStructureLocation.getX() + ", " + currentStructureLocation.getY());
+			setCurrentStructure();
+			System.out.println("Setting current structure: " + getCurrentStructure());
 		}
 	}
 	
@@ -212,9 +269,11 @@ public class ResourceManagement {
 	 * @param MapLocation of Factory
 	 */
 	public void buildFactory(Unit worker, MapLocation target) {
-		Unit blueprint = gc.senseUnitAtLocation(target);
+		Unit blueprint = currentStructure;
 		if (gc.canBuild(worker.id(), blueprint.id())) {
+			System.out.println("Unit " + worker.id() + " building blueprint");
 			gc.build(worker.id(), blueprint.id());
+			System.out.println("worker " + worker.id() + " building blueprint");
 		}
 	}
 	
@@ -278,12 +337,14 @@ public class ResourceManagement {
 		int minDistance = Integer.MAX_VALUE;
 		MapLocation targetCorner = null;
 		for (int i = 0; i < startingUnits.size(); i++) {
-			for (MapLocation corner : getCorners()) {
-				int distanceToCorner = (int) startingUnits.get(i).location().mapLocation().distanceSquaredTo(corner);
-				if (minDistance > distanceToCorner) {
-					minDistance = distanceToCorner;
-					targetCorner = corner;
-				}
+			if (startingUnits.get(i).team() == gc.team()) {
+				for (MapLocation corner : getCorners()) {
+					int distanceToCorner = (int) startingUnits.get(i).location().mapLocation().distanceSquaredTo(corner);
+					if (minDistance > distanceToCorner) {
+						minDistance = distanceToCorner;
+						targetCorner = corner;
+					}
+				}	
 			}
 		}
 		return targetCorner;
@@ -330,4 +391,42 @@ public class ResourceManagement {
 		return false;
 	}
 	
+	/**
+	 * Designate worker to build structure
+	 * 
+	 * @param Designated worker
+	 */
+	public void setWorkerToBuild(Unit worker) {
+		if (!worker.unitType().equals(UnitType.Worker)) {
+			return;
+		}
+		if (buildingWorkers.size() < NUM_WORKERS_FOR_STRUCTURE) {
+			buildingWorkers.put(worker.id(), worker);
+		}
+	}
+	
+	/**
+	 * Checks if unit is designated to build structure
+	 * 
+	 * @param Unit to check
+	 * 
+	 * @return True if worker is designated to build structure, false otherwise.
+	 */
+	public boolean isBuildingStructure(Unit unit) {
+		return buildingWorkers.containsKey(unit.id());
+	}
+	
+	/**
+	 * Reset structure related tags when build is complete
+	 */
+	public void completeStructure() {
+		structureQueued = false;
+		workersForStructure = 0;
+		targetSquaresAroundStructure = null;
+		currentStructure = null;
+		currentStructureLocation = null;
+		savingForStructure = false;
+		karboniteToSave = 0;
+		buildingWorkers.clear();
+	}
 }

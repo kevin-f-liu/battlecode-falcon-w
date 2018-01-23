@@ -40,7 +40,6 @@ public class PathFinder {
 	public int endx;
 	public int endy;
 	public boolean targeting;
-	public boolean targetingStructure;
 	public AStarNode current;
 
 	private ArrayList<AStarNode> closedSet;
@@ -54,7 +53,6 @@ public class PathFinder {
 		this.height = map.height;
 		this.width = map.width;
 		this.targeting = false;
-		this.targetingStructure = false;
 		this.closedSet = new ArrayList<AStarNode>();
 		this.openSet = new ArrayList<AStarNode>();
 		this.planet = map.getPlanet();
@@ -143,10 +141,6 @@ public class PathFinder {
 	
 	public boolean isTargeting() {
 		return this.targeting;
-	}
-	
-	public boolean isTargetingStructure() {
-		return this.targetingStructure;
 	}
 	
 	public void advanceStep() {
@@ -288,7 +282,7 @@ public class PathFinder {
 			// Find all neighbouring nodes and add to open set if not in closed set or open set
 			ArrayList<AStarNode> neighbours = this.getNeighbours(currentNode.x, currentNode.y);
 			for (AStarNode n : neighbours) {
-				if (!this.closedSet.contains(n)) {
+				if (!this.closedSet.contains(n) && !this.openSet.contains(n)) {
 					this.openSet.add(n);
 				}
 				
