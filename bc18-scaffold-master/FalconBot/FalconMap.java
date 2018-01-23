@@ -398,9 +398,15 @@ public class FalconMap {
 	}
 	
 	public void printMap() {
+		char t = '0';
 		for (int i = 0; i < this.map.length; i++) {
 			for (int j = 0; j < this.map[0].length; j++) {
-				System.out.print(this.map[i][j].getTag());
+				t = this.map[i][j].getTag();
+				if (!this.map[i][j].isPassable() && t == '0') {
+					t = 'X';
+				}
+
+				System.out.print(t);
 			}
 			System.out.println();
 		}

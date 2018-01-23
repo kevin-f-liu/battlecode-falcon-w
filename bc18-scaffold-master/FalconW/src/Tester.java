@@ -57,7 +57,7 @@ public class Tester {
 				MapNode n = new MapNode(j, i, 0, tag, m[i][j]);
 				map.map[i][j] = n;
 				map.updateNodeTag(j, i, tag);
-				map.setKarbonite(j, i, m[i][j] ? 0 : 100, false);
+				map.setKarbonite(j, i, m[i][j] ? 0 : (int) (Math.random() * 100), false);
 				if (!m[i][j]) {
 					map.karboniteDeposits.add(n);
 				}

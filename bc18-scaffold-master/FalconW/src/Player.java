@@ -6,6 +6,15 @@ import java.util.HashMap;
 import bc.*;
 
 public class Player {	
+	
+	
+	/**
+	 * TODO:
+	 * Implement karbonite patch checking for accessibility
+	 * Implement Area Accessibility
+	 * Implement karbonite patch targetting and then fine targetting
+	 * 
+	 */
 	/**
 	 * Main method for decision making
 	 * foo() => Get data (Resource management, Macro decisions)
@@ -26,6 +35,7 @@ public class Player {
 	public static void updateMap(FalconMap map, VecUnit units) {
 		 map.updateUnits(units);
 		 map.updateKarbonite();
+		 map.printMap();
 	}
 	
 	public static void main(String[] args) {
@@ -48,11 +58,12 @@ public class Player {
             System.out.println("Current round: "+gc.round());
             
             // Get our Units and put them in a wrapper.
-            VecUnit units = gc.myUnits();
+            VecUnit units = gc.units();
+            VecUnit myVecUnits = gc.myUnits();
             // Update karbonite
             updateMap(gameMap, units);
             
-            PlayerUnits myUnits = new PlayerUnits(units, OUR_TEAM);
+            PlayerUnits myUnits = new PlayerUnits(myVecUnits, OUR_TEAM);
             
             // Get Enemy Unit Locations.
             EnemyLocations enemies = new EnemyLocations(gc, ENEMY_TEAM);
@@ -94,22 +105,29 @@ public class Player {
             		
             		// Find the nearest target if not mining
             		if (!mining) {
+            			System.out.println(unit.id() + ": Not Mining");
             			if (!pf.isTargeting()) {
                 			MapLocation target = gameMap.searchForKarbonite(unitMapLocation.getX(), unitMapLocation.getY());
+                			if (target == null) System.out.println("NO TARGET");
                 			System.out.println(unit.id() + ": new target: " + target);
                 			pf.updateMap(gameMap);
-                			pf.target(unitMapLocation.getX(), unitMapLocation.getY(), target.getX(), target.getY());
+                			boolean getTarget = pf.target(unitMapLocation.getX(), unitMapLocation.getY(), target.getX(), target.getY());
+                			if (!getTarget) {
+                				System.out.println(unit.id() + " fucked up targetting");
+                			}
                 			pf.printPath(unit.id()); // Print the path for debugging
                 		}
             			
             			// Move the unit if it didn't mine, either new target or old
-//            			pf.recalculate(gameMap);
-            			Direction next = pf.nextStep();
-            			System.out.println(unit.id() + ": move direction " + next);
-            			if (next != null && gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), next)) {
-            				gc.moveRobot(unit.id(), next);
-            				pf.advanceStep();
-                			System.out.println(unit.id() + ": moved to " + gc.unit(unit.id()).location().mapLocation());
+            			pf.recalculate(gameMap);
+            			if (pf.isTargeting()) {
+	            			Direction next = pf.nextStep();
+	            			System.out.println(unit.id() + ": move direction " + next);
+	            			if (next != null && gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), next)) {
+	            				gc.moveRobot(unit.id(), next);
+	            				pf.advanceStep();
+	                			System.out.println(unit.id() + ": moved to " + gc.unit(unit.id()).location().mapLocation());
+	            			}
             			}
             		}
             	} 	
