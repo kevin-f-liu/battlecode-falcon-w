@@ -238,7 +238,7 @@ public class Player {
             /**
              *  Decision Making for Knights
              */
-            HashMap<Integer, Unit> knights = myUnits.getKnights();
+            HashMap<Integer, Unit> knights = myUnits.getKnights()();
             for (Unit knight: knights.values()){
             	MapLocation unitMapLocation = knight.location().mapLocation();
             	// Get Unit's Pathfinder.
