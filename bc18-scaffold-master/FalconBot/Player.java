@@ -104,9 +104,11 @@ public class Player {
             			System.out.println(unit.id() + ": Not Mining");
             			// Perform check that target karbonite is still there. If it isn't, search again
             			boolean targetKarboniteGone = false;
-            			if (gc.karboniteAt(pf.getTarget()) == 0) {
-            				targetKarboniteGone = true;
-            			}
+            			try {
+	            			if (gc.karboniteAt(pf.getTarget()) == 0) {
+	            				targetKarboniteGone = true;
+	            			}
+            			} catch (RuntimeException ex) {} // Don't care about checking a location outside vision
             			if (!pf.isTargeting() || targetKarboniteGone) {
                 			MapLocation target = gameMap.searchForKarbonite(unitMapLocation.getX(), unitMapLocation.getY());
                 			if (target == null) System.out.println("NO TARGET");
