@@ -99,10 +99,10 @@ public class PathFinder {
 		return neighbours;
 	}
 	
-	public void recalculate(FalconMap newMap) {
+	public boolean recalculate(FalconMap newMap) {
 		// When the map is updated
 		updateMap(newMap);
-		calculatePath(this.current.x, this.current.y, this.endx, this.endy);
+		return calculatePath(this.current.x, this.current.y, this.endx, this.endy);
 	}
 	
 	public boolean target(int startx, int starty, int endx, int endy) {

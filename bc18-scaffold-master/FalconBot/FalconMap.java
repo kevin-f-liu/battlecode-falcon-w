@@ -280,7 +280,8 @@ public class FalconMap {
 		// Search by expanding rings
 		int maxRadius = (int) Math.max(Math.max(this.width - 1 - centerX, centerX), Math.max(this.height - 1 - centerY, centerY));
 			
-		for (int radius = 1; radius < maxRadius; radius++) {
+		for (int radius = 1; radius <= maxRadius; radius++) {
+//			System.out.println("Center (" + centerX + ", " + centerY + ") Radius: " + radius);
 			// I hate how this is written
 			for (int x = centerX - radius; x <= centerX + radius; x += 2*radius) {
 				for (int y = centerY - radius; y < centerY + radius; y++) {
@@ -413,7 +414,7 @@ public class FalconMap {
 //				System.out.println("(" + j + ", " + i + ")|" + this.map[j][i].isPassable() + "|" + this.map[j][i].getTag());
 				t = this.map[i][j].getTag();
 				if (!this.map[i][j].isPassable() && t == '0') t = 'X';
-				System.out.print(this.map[i][j].isPassable());
+				System.out.print(t);
 			}
 			System.out.println();
 		}

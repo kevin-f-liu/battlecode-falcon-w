@@ -35,7 +35,6 @@ public class Player {
 	public static void updateMap(FalconMap map, VecUnit units) {
 		 map.updateUnits(units);
 		 map.updateKarbonite();
-		 map.printMap();
 	}
 	
 	public static void main(String[] args) {
@@ -115,7 +114,7 @@ public class Player {
                 			pf.updateMap(gameMap);
                 			boolean getTarget = pf.target(unitMapLocation.getX(), unitMapLocation.getY(), target.getX(), target.getY());
                 			if (!getTarget) {
-                				System.out.println(unit.id() + " fucked up targetting");
+                				System.out.println(unit.id() + " messed up targetting");
                 			}
                 			pf.printPath(unit.id()); // Print the path for debugging
                 		}
