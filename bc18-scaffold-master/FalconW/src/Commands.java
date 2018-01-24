@@ -24,7 +24,7 @@ public class Commands {
 	 * @return
 	 */
 	public int getWorkerAction(Unit worker){
-		
+		return 0;
 	}
 	
 	

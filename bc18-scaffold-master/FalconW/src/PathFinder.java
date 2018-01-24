@@ -46,6 +46,9 @@ public class PathFinder {
 	private ArrayList<AStarNode> openSet;
 	public ArrayList<AStarNode> path;
 	
+	public PathFinder() {
+	}
+	
 	public PathFinder(FalconMap map) {
 		this.height = map.height;
 		this.width = map.width;
@@ -279,7 +282,7 @@ public class PathFinder {
 			// Find all neighbouring nodes and add to open set if not in closed set or open set
 			ArrayList<AStarNode> neighbours = this.getNeighbours(currentNode.x, currentNode.y);
 			for (AStarNode n : neighbours) {
-				if (!this.closedSet.contains(n)) {
+				if (!this.closedSet.contains(n) && !this.openSet.contains(n)) {
 					this.openSet.add(n);
 				}
 				
