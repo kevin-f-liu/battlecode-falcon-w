@@ -65,15 +65,16 @@ public class FalconMap {
 		char tag;
 		int karbonite;
 		VecUnit initialUnits = m.getInitial_units();
+		MapLocation tmp;
 		
 		for (int i = 0; i < (int) height; i++) {
 			for (int j = 0; j < (int) width; j++) {
-				MapLocation tmp = new MapLocation(gc.planet(), j, i);
+				tmp = new MapLocation(gc.planet(), j, i);
 				karbonite = (int) m.initialKarboniteAt(tmp);
 				tag = '0'; // Default tag to nothing
 				MapNode node = new MapNode(j, i, karbonite, tag, (boolean) (m.isPassableTerrainAt(tmp) == 1));
 				map[i][j] = node;
-				if (m.isPassableTerrainAt(tmp) != 1) {
+				if (m.isPassableTerrainAt(tmp) == 0) {
 					this.impassableTerrain.add(node);
 				}
 				if (karbonite > 0) {
@@ -89,8 +90,12 @@ public class FalconMap {
 			int ux = u.location().mapLocation().getX();
 			int uy = u.location().mapLocation().getY();
 			if (u.team() == this.team) {
+				System.out.println(u.id() + " : TEAM " + u.team() + " | " + this.team);
+
 				this.updateNodeTag(ux, uy, 'w');
 			} else {
+				System.out.println(u.id() + " : TEAM " + u.team() + " | " + this.team);
+
 				this.updateNodeTag(ux, uy, 'W');
 			}
 		}
@@ -102,13 +107,12 @@ public class FalconMap {
 	public void updateUnits(VecUnit allUnits) {
 		// Update unit tags every turn
 		Set<MapNode> modified = new HashSet<MapNode>();
-		Set<MapNode> original = new HashSet<MapNode>();
-		
-		boolean ally = true;
+		Set<MapNode> original = new HashSet<MapNode>(); // Original PLUS nodes with new tags
+		boolean ally;
 		for (int i = 0; i < allUnits.size(); i++) {
 			Unit u = allUnits.get(i);
 			MapLocation unitLoc = u.location().mapLocation();
-			if (u.team() != this.team) ally = false;
+			ally = u.team() == this.team;
 			
 			char unitTag = this.unitLegend.get(u.unitType());
 			this.updateNodeTag(unitLoc.getX(), unitLoc.getY(), ally ? unitTag : Character.toUpperCase(unitTag)); // Handles nodeContentMap updates
@@ -116,9 +120,11 @@ public class FalconMap {
 		}
 		// Iterate through all the stored MapNodes in nodeContentMap, and add to orig set
 		for (Character tag : this.nodeContentMap.keySet()) {
-			ArrayList<MapNode> nodeList = this.nodeContentMap.get(tag);
-			for (MapNode node : nodeList) {
-				original.add(node);
+			if (tag != '0') {
+				ArrayList<MapNode> nodeList = this.nodeContentMap.get(tag);
+				for (MapNode node : nodeList) {
+					original.add(node);
+				}
 			}
 		}
 		original.removeAll(modified); // Get the difference between the original and the modified nodes
@@ -162,31 +168,34 @@ public class FalconMap {
 		// Get the node first
 		MapNode node = map[y][x];
 		char oldTag = node.getTag();
-		if (nodeContentMap.containsKey(oldTag)) {
+		if (this.nodeContentMap.containsKey(oldTag)) {
 			// Remove 
-			nodeContentMap.get(oldTag).remove(node);
+			this.nodeContentMap.get(oldTag).remove(node);
 		}
-		if (nodeContentMap.containsKey(newTag)) {
+		if (this.nodeContentMap.containsKey(newTag)) {
 			// Add node to map if key exists already
-			nodeContentMap.get(newTag).add(node);
+			this.nodeContentMap.get(newTag).add(node);
 		} else {
 			ArrayList<MapNode> nodeList = new ArrayList<MapNode>();
 			nodeList.add(node);
-			nodeContentMap.put(newTag, nodeList);
+			this.nodeContentMap.put(newTag, nodeList);
 		}
 		node.setTag(newTag);
-		node.setPassable(false);
+		if (newTag != '0') {
+			node.setPassable(false);
+		}
 	}
 	
 	public void removeNodeTag(int x, int y) {
 		// Get the node first
 		MapNode node = map[y][x];
 		char oldTag = node.getTag();
-		if (nodeContentMap.containsKey(oldTag)) {
+		if (this.nodeContentMap.containsKey(oldTag)) {
 			// Remove from map
-			nodeContentMap.get(oldTag).remove(node);
+			this.nodeContentMap.get(oldTag).remove(node);
 		}
 		node.setTag('0'); // Set to blank
+		this.nodeContentMap.get('0').add(node);
 		node.setPassable(true);
 	}
 	
@@ -401,12 +410,10 @@ public class FalconMap {
 		char t = '0';
 		for (int i = 0; i < this.map.length; i++) {
 			for (int j = 0; j < this.map[0].length; j++) {
+//				System.out.println("(" + j + ", " + i + ")|" + this.map[j][i].isPassable() + "|" + this.map[j][i].getTag());
 				t = this.map[i][j].getTag();
-				if (!this.map[i][j].isPassable() && t == '0') {
-					t = 'X';
-				}
-
-				System.out.print(t);
+				if (!this.map[i][j].isPassable() && t == '0') t = 'X';
+				System.out.print(this.map[i][j].isPassable());
 			}
 			System.out.println();
 		}

@@ -95,18 +95,20 @@ public class Player {
             			System.out.println(unit.id() + ": Mining karbonite | " + gc.karboniteAt(unitMapLocation));
             			mining = true;
             			gc.harvest(unit.id(), Direction.Center);
-            		} else if (unitMapLocation.equals(pf.getTarget())){
-            			// target is correct but it ran out
-            			if (gameMap.get(unitMapLocation.getX(), unitMapLocation.getY()).getTag() == '1') {
+            			if (gc.karboniteAt(unitMapLocation) == 0) {
             				System.out.println("Ran out of karbonite at " + unitMapLocation);
-            				gameMap.get(unitMapLocation.getX(), unitMapLocation.getY()).setTag('0'); // Clear the square
             			}
             		}
             		
             		// Find the nearest target if not mining
             		if (!mining) {
             			System.out.println(unit.id() + ": Not Mining");
-            			if (!pf.isTargeting()) {
+            			// Perform check that target karbonite is still there. If it isn't, search again
+            			boolean targetKarboniteGone = false;
+            			if (gc.karboniteAt(pf.getTarget()) == 0) {
+            				targetKarboniteGone = true;
+            			}
+            			if (!pf.isTargeting() || targetKarboniteGone) {
                 			MapLocation target = gameMap.searchForKarbonite(unitMapLocation.getX(), unitMapLocation.getY());
                 			if (target == null) System.out.println("NO TARGET");
                 			System.out.println(unit.id() + ": new target: " + target);
