@@ -110,8 +110,8 @@ public class Player {
             	
         		// Target the worker's pathfinder to the build location
         		if (rm.structureQueued() && rm.workersForStructure() > 0 && !rm.isBuildingStructure(unit)) {
-        			MapLocation target = workerLocationsForFactory[ResourceManagement.NUM_WORKERS_FOR_STRUCTURE - rm.workersForStructure()];
-        			System.out.println(unit.id() + ": BUILD target (" + target.getX() + ", " + target.getY() + ")");
+        			MapLocation target = workerLocationsForFactory[ResourceManagement.NUM_WORKERS_FOR_STRUCTURE - rm.workersForStructure() * factories.size()];
+        			System.out.println(unit.id() + ": build target (" + target.getX() + ", " + target.getY() + ")");
         			if (target != null) {
         				 pf.updateMap(gameMap);
         				 pf.target(unitMapLocation.getX(), unitMapLocation.getY(), target.getX(), target.getY());
