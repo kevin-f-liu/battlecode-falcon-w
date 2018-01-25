@@ -72,7 +72,7 @@ public class FalconMap {
 				tmp = new MapLocation(gc.planet(), j, i);
 				karbonite = (int) m.initialKarboniteAt(tmp);
 				tag = '0'; // Default tag to nothing
-				MapNode node = new MapNode(j, i, karbonite, tag, (boolean) (m.isPassableTerrainAt(tmp) == 1));
+				MapNode node = new MapNode(j, i, karbonite, tag, -1, (boolean) (m.isPassableTerrainAt(tmp) == 1));
 				map[i][j] = node;
 				if (m.isPassableTerrainAt(tmp) == 0) {
 					this.impassableTerrain.add(node);
@@ -80,7 +80,7 @@ public class FalconMap {
 				if (karbonite > 0) {
 					this.karboniteDeposits.add(node);
 				}
-				this.updateNodeTag(j, i, tag); // Init the nodes in nodeContentMap
+				this.updateNodeTag(j, i, tag, -1); // Init the nodes in nodeContentMap
 			}
 		}
 		
@@ -92,11 +92,11 @@ public class FalconMap {
 			if (u.team() == this.team) {
 				System.out.println(u.id() + " : TEAM " + u.team() + " | " + this.team);
 
-				this.updateNodeTag(ux, uy, 'w');
+				this.updateNodeTag(ux, uy, 'w', u.id());
 			} else {
 				System.out.println(u.id() + " : TEAM " + u.team() + " | " + this.team);
 
-				this.updateNodeTag(ux, uy, 'W');
+				this.updateNodeTag(ux, uy, 'W', u.id());
 			}
 		}
 		
@@ -115,7 +115,7 @@ public class FalconMap {
 			ally = u.team() == this.team;
 			
 			char unitTag = this.unitLegend.get(u.unitType());
-			this.updateNodeTag(unitLoc.getX(), unitLoc.getY(), ally ? unitTag : Character.toUpperCase(unitTag)); // Handles nodeContentMap updates
+			this.updateNodeTag(unitLoc.getX(), unitLoc.getY(), ally ? unitTag : Character.toUpperCase(unitTag), u.id()); // Handles nodeContentMap updates
 			modified.add(this.get(unitLoc.getX(), unitLoc.getY()));
 		}
 		// Iterate through all the stored MapNodes in nodeContentMap, and add to orig set
@@ -164,7 +164,7 @@ public class FalconMap {
 	 * @param y
 	 * @param newTag
 	 */
-	public void updateNodeTag(int x, int y, char newTag) {
+	public void updateNodeTag(int x, int y, char newTag, int unitID) {
 		// Get the node first
 		MapNode node = map[y][x];
 		char oldTag = node.getTag();
@@ -181,7 +181,9 @@ public class FalconMap {
 			this.nodeContentMap.put(newTag, nodeList);
 		}
 		node.setTag(newTag);
+		node.setUnitID(-1); // if the new tag is 0
 		if (newTag != '0') {
+			node.setUnitID(unitID);
 			node.setPassable(false);
 		}
 	}
@@ -195,6 +197,7 @@ public class FalconMap {
 			this.nodeContentMap.get(oldTag).remove(node);
 		}
 		node.setTag('0'); // Set to blank
+		node.setUnitID(-1);
 		this.nodeContentMap.get('0').add(node);
 		node.setPassable(true);
 	}
@@ -405,6 +408,82 @@ public class FalconMap {
 		
 		// Nothing found. Just be careful when handling these return values
 		return null;
+	}
+	
+	/**
+	 * Gets the unit ids of a specific tag in order of closest to furthest from a target x, y
+	 * Be careful to only call after calling update for that round
+	 * @param x x coordinate of target
+	 * @param y y coordinate of the target
+	 * @param tag the tag of the type of unit you are searching for. Remembering that capital means enemy
+	 * @return Arraylist of integers representing the unit id's of the units
+	 * @return null return should be caught and means map has not been fully initialized
+	 */
+	public ArrayList<Integer> getClosestUnits(int x, int y, char tag) {
+		if (!this.nodeContentMap.containsKey(tag)) {
+			return null;
+		}
+		ArrayList<Integer> ret = new ArrayList<Integer>();
+		ArrayList<Integer> pathLengths = new ArrayList<Integer>();
+		ArrayList<MapNode> relevantNodes = this.nodeContentMap.get(tag);
+		MapNode[][] tempMap = new MapNode[this.height][this.width];
+		for (int i = 0; i < this.map.length; i++) {
+			for (int j = 0; j < this.map[0].length; j++) {
+				tempMap[i][j] = new MapNode(this.map[i][j]);
+			}
+		}
+		
+		// Perform BFS from the target and fill the whole map with nodes
+		ArrayDeque<MapNode> unvisited = new ArrayDeque<MapNode>();
+		ArrayList<MapNode> visited = new ArrayList<MapNode>();
+		ArrayList<MapNode> neighbours = new ArrayList<MapNode>();
+		MapNode start = new MapNode(this.map[y][x]); // clone
+		
+		unvisited.add(start);
+		MapNode current;
+		// Should fill the temp map
+		while (!unvisited.isEmpty()) {
+			neighbours.clear();
+			current = unvisited.removeFirst(); // Nodes in unvisited are cloes of nodes in falconmap
+			
+			// Get all the neighbours
+			if (this.isOnMap(current.x, current.y + 1)) neighbours.add(tempMap[current.y + 1][current.x]); // Up
+			if (this.isOnMap(current.x + 1, current.y)) neighbours.add(tempMap[current.y][current.x + 1]); // Right
+			if (this.isOnMap(current.x, current.y - 1)) neighbours.add(tempMap[current.y - 1][current.x]); // Down
+			if (this.isOnMap(current.x - 1, current.y)) neighbours.add(tempMap[current.y][current.x - 1]); // Left
+			for (MapNode n : neighbours) {
+				if ((n.isPassable() || n.getUnitID() > 0) && n.getParent() == null) {
+					n.setParent(current); // Have node reference parent
+					unvisited.addLast(n);
+				}
+			}
+		}
+		
+		// Print map
+//		System.out.println("TEMP MAP");
+//		for (MapNode[] ma : tempMap) {
+//			for (MapNode n : ma) {
+//				System.out.print(n.parent);
+//			}
+//			System.out.println();
+//		}
+		
+		// Iterate through all units of the given tag
+		for (MapNode n : this.nodeContentMap.get(tag)) {
+			MapNode backtrackCurrent = tempMap[n.y][n.x]; // Cloned node with parent reference
+			int pathLength = 0;
+			while (backtrackCurrent.parent != null) {
+				backtrackCurrent = backtrackCurrent.parent;
+				pathLength++;
+			}	
+			int i = 0;
+			try { 
+				while (pathLengths.get(i) < pathLength) i++;
+			} catch (IndexOutOfBoundsException ex) {}
+			pathLengths.add(i, pathLength);
+			ret.add(i, n.getUnitID());
+		}
+		return ret;
 	}
 	
 	public void printMap() {

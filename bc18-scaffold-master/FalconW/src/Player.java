@@ -63,6 +63,10 @@ public class Player {
             myUnits.checkNewUnits(units); // Update new unit references
             EnemyLocations enemies = new EnemyLocations(gc, ENEMY_TEAM); // grab a list of enemy locations
             
+            // TEST
+            System.out.println("trying to get closest units");
+            System.out.println(gameMap.getClosestUnits(0, 0, 'w'));
+            
             // Mappings storing each type of unit
             HashMap<Integer, Unit> workers = myUnits.getWorkers();
             HashMap<Integer, Unit> factories = myUnits.getFactories();
