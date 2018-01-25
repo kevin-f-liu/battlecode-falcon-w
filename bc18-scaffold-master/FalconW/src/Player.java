@@ -165,6 +165,7 @@ public class Player {
             			System.out.println(unit.id() + ": Mining karbonite | " + gc.karboniteAt(unitMapLocation));
             			mining = true;
             			gc.harvest(unit.id(), Direction.Center);
+            			gameMap.decreaseKarbonite(unitMapLocation.getX(), unitMapLocation.getY(), (int) unit.workerHarvestAmount(), false);
             			if (gc.karboniteAt(unitMapLocation) == 0) {
             				System.out.println("Ran out of karbonite at " + unitMapLocation);
             			}

@@ -16,7 +16,7 @@ public class FalconMap {
 	public MapNode[][] map;
 	public HashMap<Character, ArrayList<MapNode>> nodeContentMap;
 	public ArrayList<MapNode> karboniteDeposits;
-	public ArrayList<ArrayList<MapNode>> karboniteBlobs;
+	public ArrayList<ArrayList<MapNode>> karboniteBlobs; // Ordered in best to worst
 	public ArrayList<MapNode> impassableTerrain;
 	
 	public int width;
@@ -232,9 +232,9 @@ public class FalconMap {
 	 */
 	public boolean decreaseKarbonite(int x, int y, int amount, boolean returnRemoveFlag) {
 		map[y][x].removeKarbonite(amount);
-		if (!returnRemoveFlag && map[y][x].karbonite <= 0) {
+		if (!returnRemoveFlag && map[y][x].getKarbonite() <= 0) {
 			this.karboniteDeposits.remove(this.map[y][x]);
-		} else if (returnRemoveFlag && map[y][x].karbonite <= 0) {
+		} else if (returnRemoveFlag && map[y][x].getKarbonite() <= 0) {
 			return true;
 		}
 		return false;
