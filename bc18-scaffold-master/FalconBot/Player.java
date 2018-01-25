@@ -6,6 +6,18 @@ import java.util.HashMap;
 import bc.*;
 
 public class Player {	
+<<<<<<< HEAD
+	
+	
+	/**
+	 * TODO:
+	 * Implement karbonite patch checking for accessibility
+	 * Implement Area Accessibility
+	 * Implement karbonite patch targetting and then fine targetting
+	 * 
+	 */
+=======
+>>>>>>> master
 	/**
 	 * Main method for decision making
 	 * foo() => Get data (Resource management, Macro decisions)
@@ -47,6 +59,17 @@ public class Player {
  		
         while (true) {
             System.out.println("Current round: "+gc.round());
+<<<<<<< HEAD
+            
+            // Get our Units and put them in a wrapper.
+            VecUnit units = gc.units();
+            VecUnit myVecUnits = gc.myUnits();
+            // Update karbonite
+            updateMap(gameMap, units);
+            
+            PlayerUnits myUnits = new PlayerUnits(myVecUnits, OUR_TEAM);
+            
+=======
      
            // Update Units
             VecUnit units = gc.units();
@@ -55,6 +78,7 @@ public class Player {
                         
             // Update karbonite
             updateMap(gameMap, units);
+>>>>>>> master
             // Get Enemy Unit Locations.
             EnemyLocations enemies = new EnemyLocations(gc, ENEMY_TEAM);
 
@@ -96,6 +120,17 @@ public class Player {
             		
             		System.out.println(unit.id() + ": now at " + unitMapLocation);
             		
+<<<<<<< HEAD
+            		// See if the worker is standing on karbonite that is is supposed to mine, if it is, mine it
+            		boolean mining = false;
+            		System.out.println(unit.id() + ": Standing on " + gc.karboniteAt(unitMapLocation) + "k");
+            		if (gc.karboniteAt(unitMapLocation) > 0 && unitMapLocation.equals(pf.getTarget())) {
+            			System.out.println(unit.id() + ": Mining karbonite | " + gc.karboniteAt(unitMapLocation));
+            			mining = true;
+            			gc.harvest(unit.id(), Direction.Center);
+            			if (gc.karboniteAt(unitMapLocation) == 0) {
+            				System.out.println("Ran out of karbonite at " + unitMapLocation);
+=======
             		if (rm.structureQueued() && rm.workersForStructure() > 0 && !rm.isBuildingStructure(unit)) {
             			
             			MapLocation target = workerLocationsForFactory[ResourceManagement.NUM_WORKERS_FOR_STRUCTURE - rm.workersForStructure()];
@@ -104,10 +139,45 @@ public class Player {
             				 pf.updateMap(gameMap);
             				 pf.target(unitMapLocation.getX(), unitMapLocation.getY(), target.getX(), target.getY());
             				 rm.setWorkerToBuild(unit);
+>>>>>>> master
             			}
             			rm.decreaseWorkersForStructure();
             		}
             		
+<<<<<<< HEAD
+            		// Find the nearest target if not mining
+            		if (!mining) {
+            			System.out.println(unit.id() + ": Not Mining");
+            			// Perform check that target karbonite is still there. If it isn't, search again
+            			boolean targetKarboniteGone = false;
+            			try {
+	            			if (gc.karboniteAt(pf.getTarget()) == 0) {
+	            				targetKarboniteGone = true;
+	            			}
+            			} catch (RuntimeException ex) {} // Don't care about checking a location outside vision
+            			if (!pf.isTargeting() || targetKarboniteGone) {
+                			MapLocation target = gameMap.searchForKarbonite(unitMapLocation.getX(), unitMapLocation.getY());
+                			if (target == null) System.out.println("NO TARGET");
+                			System.out.println(unit.id() + ": new target: " + target);
+                			pf.updateMap(gameMap);
+                			boolean getTarget = pf.target(unitMapLocation.getX(), unitMapLocation.getY(), target.getX(), target.getY());
+                			if (!getTarget) {
+                				System.out.println(unit.id() + " messed up targetting");
+                			}
+                			pf.printPath(unit.id()); // Print the path for debugging
+                		}
+            			
+            			// Move the unit if it didn't mine, either new target or old
+            			pf.recalculate(gameMap);
+            			if (pf.isTargeting()) {
+	            			Direction next = pf.nextStep();
+	            			System.out.println(unit.id() + ": move direction " + next);
+	            			if (next != null && gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), next)) {
+	            				gc.moveRobot(unit.id(), next);
+	            				pf.advanceStep();
+	                			System.out.println(unit.id() + ": moved to " + gc.unit(unit.id()).location().mapLocation());
+	            			}
+=======
             		if (rm.isBuildingStructure(unit)) {
             			System.out.println(unit.id() + " assigned to BUILD structure");
             			// Not reached destination yet
@@ -133,6 +203,7 @@ public class Player {
             			else {
             				System.out.print(unit.id() + " building factory");
             				rm.buildFactory(unit, factoryLocation);
+>>>>>>> master
             			}
 
             		}
@@ -348,7 +419,7 @@ public class Player {
             
             
             
-           
+            System.gc();
             gc.nextTurn();
         }
     }

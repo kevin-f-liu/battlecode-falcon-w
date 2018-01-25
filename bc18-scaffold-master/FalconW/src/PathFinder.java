@@ -92,7 +92,7 @@ public class PathFinder {
 		for (int i = y - 1; i <= y + 1; i ++) {
 			for (int j = x - 1; j <= x + 1; j ++) {
 				if (j != x || i != y) {
-					if (j >= 0 && i >= 0 && i < this.height && j < this.width && this.map[i][j].isPassable()) {
+					if (j >= 0 && i >= 0 && i < this.height && j < this.width && (this.map[i][j].isPassable() || (j == this.endx && i == this.endy))) {
 						neighbours.add(this.map[i][j]);
 					}
 				}
@@ -102,19 +102,19 @@ public class PathFinder {
 		return neighbours;
 	}
 	
-	public void recalculate(FalconMap newMap) {
+	public boolean recalculate(FalconMap newMap) {
 		// When the map is updated
 		updateMap(newMap);
-		calculatePath(this.current.x, this.current.y, this.endx, this.endy);
+		return calculatePath(this.current.x, this.current.y, this.endx, this.endy);
 	}
 	
-	public void target(int startx, int starty, int endx, int endy) {
+	public boolean target(int startx, int starty, int endx, int endy) {
 		// Basic call, specifies current location
 		this.targeting = true;
 		if (this.map == null) {
 			throw (new RuntimeException("You need to init a map first"));
 		}
-		calculatePath(startx, starty, endx, endy);
+		return calculatePath(startx, starty, endx, endy);
 	}
 	
 	public void retarget(int x, int y) {
@@ -233,7 +233,7 @@ public class PathFinder {
 	}
 	
 	public void printPath(int unitid) {
-		String ret = "";
+		String ret = "PATH: ";
 		try {
 			for (AStarNode n : this.path) {
 				ret += "[" + n.x + ", " + n.y + "]";
@@ -244,7 +244,7 @@ public class PathFinder {
 		}
 	}
 	
-	public void calculatePath(int startx, int starty, int endx, int endy) {
+	public boolean calculatePath(int startx, int starty, int endx, int endy) {
 		// Reset everything
 		this.openSet = new ArrayList<AStarNode>();
 		this.closedSet = new ArrayList<AStarNode>();
@@ -261,7 +261,7 @@ public class PathFinder {
 		currentNode.gCost = 0;
 		currentNode.hCost = this.getHDistance(currentNode, endNode);
 		this.openSet.add(currentNode);
-		
+		System.out.println("Trying to calculate a path from (" + startx + ", " + starty + ") to " + "(" + endx + ", " + endy + ")");
 		while (!this.openSet.isEmpty()) {
 			// First find the best node in the open set, by fCost
 			AStarNode bestNode = null;
@@ -300,8 +300,9 @@ public class PathFinder {
 			if (currentNode.x == endNode.x && currentNode.y == endNode.y) {
 				System.out.println("FOUND END");
 				this.createPath(startNode, currentNode);
-				break;
+				return true;
 			}
 		}
+		return false;
 	}
 }

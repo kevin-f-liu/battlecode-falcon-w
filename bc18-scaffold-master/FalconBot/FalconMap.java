@@ -1,5 +1,10 @@
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
+<<<<<<< HEAD
+import java.util.Deque;
+=======
+>>>>>>> master
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -14,6 +19,10 @@ public class FalconMap {
 	public MapNode[][] map;
 	public HashMap<Character, ArrayList<MapNode>> nodeContentMap;
 	public ArrayList<MapNode> karboniteDeposits;
+<<<<<<< HEAD
+	public ArrayList<ArrayList<MapNode>> karboniteBlobs;
+=======
+>>>>>>> master
 	public ArrayList<MapNode> impassableTerrain;
 	
 	public int width;
@@ -24,6 +33,12 @@ public class FalconMap {
 	public FalconMap() {
 		// For testing only please don't use this or remove it
 		this.nodeContentMap = new HashMap<Character, ArrayList<MapNode>>();
+<<<<<<< HEAD
+		this.initUnitLegend();
+		this.karboniteDeposits = new ArrayList<MapNode>();
+		
+=======
+>>>>>>> master
 	}
 	
 	public FalconMap(GameController gcx) {
@@ -59,15 +74,20 @@ public class FalconMap {
 		char tag;
 		int karbonite;
 		VecUnit initialUnits = m.getInitial_units();
+		MapLocation tmp;
 		
 		for (int i = 0; i < (int) height; i++) {
 			for (int j = 0; j < (int) width; j++) {
-				MapLocation tmp = new MapLocation(gc.planet(), j, i);
+				tmp = new MapLocation(gc.planet(), j, i);
 				karbonite = (int) m.initialKarboniteAt(tmp);
 				tag = '0'; // Default tag to nothing
 				MapNode node = new MapNode(j, i, karbonite, tag, (boolean) (m.isPassableTerrainAt(tmp) == 1));
 				map[i][j] = node;
+<<<<<<< HEAD
+				if (m.isPassableTerrainAt(tmp) == 0) {
+=======
 				if (m.isPassableTerrainAt(tmp) != 1) {
+>>>>>>> master
 					this.impassableTerrain.add(node);
 				}
 				if (karbonite > 0) {
@@ -83,16 +103,42 @@ public class FalconMap {
 			int ux = u.location().mapLocation().getX();
 			int uy = u.location().mapLocation().getY();
 			if (u.team() == this.team) {
+<<<<<<< HEAD
+				System.out.println(u.id() + " : TEAM " + u.team() + " | " + this.team);
+
+				this.updateNodeTag(ux, uy, 'w');
+			} else {
+				System.out.println(u.id() + " : TEAM " + u.team() + " | " + this.team);
+
+				this.updateNodeTag(ux, uy, 'W');
+			}
+		}
+		
+		// Do preprocessing on karbonite
+		this.initKarboniteBlobs();
+=======
 				this.updateNodeTag(ux, uy, 'w');
 			} else {
 				this.updateNodeTag(ux, uy, 'W');
 			}
 		}
+>>>>>>> master
 	}
 	
 	public void updateUnits(VecUnit allUnits) {
 		// Update unit tags every turn
 		Set<MapNode> modified = new HashSet<MapNode>();
+<<<<<<< HEAD
+		Set<MapNode> original = new HashSet<MapNode>(); // Original PLUS nodes with new tags
+		boolean ally;
+		for (int i = 0; i < allUnits.size(); i++) {
+			Unit u = allUnits.get(i);
+			MapLocation unitLoc = u.location().mapLocation();
+			ally = u.team() == this.team;
+			
+			char unitTag = this.unitLegend.get(u.unitType());
+			this.updateNodeTag(unitLoc.getX(), unitLoc.getY(), ally ? unitTag : Character.toUpperCase(unitTag)); // Handles nodeContentMap updates
+=======
 		Set<MapNode> original = new HashSet<MapNode>();
 		
 		boolean ally = true;
@@ -103,18 +149,31 @@ public class FalconMap {
 			
 			char unitTag = this.unitLegend.get(u.unitType());
 			this.updateNodeTag(unitLoc.getX(), unitLoc.getY(), ally ? unitTag : Character.toUpperCase(unitTag));
+>>>>>>> master
 			modified.add(this.get(unitLoc.getX(), unitLoc.getY()));
 		}
 		// Iterate through all the stored MapNodes in nodeContentMap, and add to orig set
 		for (Character tag : this.nodeContentMap.keySet()) {
+<<<<<<< HEAD
+			if (tag != '0') {
+				ArrayList<MapNode> nodeList = this.nodeContentMap.get(tag);
+				for (MapNode node : nodeList) {
+					original.add(node);
+				}
+=======
 			ArrayList<MapNode> nodeList = this.nodeContentMap.get(tag);
 			for (MapNode node : nodeList) {
 				original.add(node);
+>>>>>>> master
 			}
 		}
 		original.removeAll(modified); // Get the difference between the original and the modified nodes
 		for (MapNode node : original) {
+<<<<<<< HEAD
+			// Every Node here has had the unit destroyed or moved
+=======
 			// Every Node here has had the unit destroyed.
+>>>>>>> master
 			this.removeNodeTag(node.x, node.y);
 		}
 	}
@@ -153,6 +212,23 @@ public class FalconMap {
 		// Get the node first
 		MapNode node = map[y][x];
 		char oldTag = node.getTag();
+<<<<<<< HEAD
+		if (this.nodeContentMap.containsKey(oldTag)) {
+			// Remove 
+			this.nodeContentMap.get(oldTag).remove(node);
+		}
+		if (this.nodeContentMap.containsKey(newTag)) {
+			// Add node to map if key exists already
+			this.nodeContentMap.get(newTag).add(node);
+		} else {
+			ArrayList<MapNode> nodeList = new ArrayList<MapNode>();
+			nodeList.add(node);
+			this.nodeContentMap.put(newTag, nodeList);
+		}
+		node.setTag(newTag);
+		if (newTag != '0') {
+			node.setPassable(false);
+=======
 		if (nodeContentMap.containsKey(oldTag)) {
 			// Remove 
 			nodeContentMap.get(oldTag).remove(node);
@@ -164,6 +240,7 @@ public class FalconMap {
 			ArrayList<MapNode> nodeList = new ArrayList<MapNode>();
 			nodeList.add(node);
 			nodeContentMap.put(newTag, nodeList);
+>>>>>>> master
 		}
 		node.setTag(newTag);
 	}
@@ -177,6 +254,19 @@ public class FalconMap {
 			nodeContentMap.get(oldTag).remove(node);
 		}
 		node.setTag('0'); // Set to blank
+	}
+	
+	public void removeNodeTag(int x, int y) {
+		// Get the node first
+		MapNode node = map[y][x];
+		char oldTag = node.getTag();
+		if (this.nodeContentMap.containsKey(oldTag)) {
+			// Remove from map
+			this.nodeContentMap.get(oldTag).remove(node);
+		}
+		node.setTag('0'); // Set to blank
+		this.nodeContentMap.get('0').add(node);
+		node.setPassable(true);
 	}
 	
 	public Planet getPlanet() {
@@ -198,7 +288,11 @@ public class FalconMap {
 	}
 	
 	/**
+<<<<<<< HEAD
+	 * decrease the karbonite at the given node
+=======
 	 * Set the karbonite at the given node
+>>>>>>> master
 	 * @param x
 	 * @param y
 	 * @param amount
@@ -260,7 +354,12 @@ public class FalconMap {
 		// Search by expanding rings
 		int maxRadius = (int) Math.max(Math.max(this.width - 1 - centerX, centerX), Math.max(this.height - 1 - centerY, centerY));
 			
+<<<<<<< HEAD
+		for (int radius = 1; radius <= maxRadius; radius++) {
+//			System.out.println("Center (" + centerX + ", " + centerY + ") Radius: " + radius);
+=======
 		for (int radius = 1; radius < maxRadius; radius++) {
+>>>>>>> master
 			// I hate how this is written
 			for (int x = centerX - radius; x <= centerX + radius; x += 2*radius) {
 				for (int y = centerY - radius; y < centerY + radius; y++) {
@@ -285,6 +384,76 @@ public class FalconMap {
 	}
 	
 	/**
+<<<<<<< HEAD
+	 * Does a BFS to first create groupings of karbonite, then orders them based on an important heuristic
+	 * Score = (1 - n1 / nt) * k / a
+	 * n1 = Number of nodes with 2 non orthogonal neighbours + Number with 1 neighbour 
+	 * nt = Total Nodes
+	 * k = total karbonite
+	 * a = area of a circumscribing rectangle
+	 */
+	public void initKarboniteBlobs() {
+		ArrayList<MapNode> visited = new ArrayList<MapNode>();
+		ArrayDeque<MapNode> unvisited = new ArrayDeque<MapNode>();
+
+		ArrayList<ArrayList<MapNode>> blobs = new ArrayList<ArrayList<MapNode>>();
+		ArrayList<Double> blobScores = new ArrayList<Double>();
+		ArrayList<MapNode> blob = new ArrayList<MapNode>();
+		int maxx, maxy, minx, miny, numSparseNodes, numNeighbours, totalKarbonite; // For efficiency
+		for (MapNode node : this.karboniteDeposits) {
+			// Start of a new blob
+			if (!visited.contains(node)) {
+				blob = new ArrayList<MapNode>();
+				unvisited.clear();
+				unvisited.add(node);
+				
+				maxx = node.x;
+				minx = node.x;
+				maxy = node.y;
+				miny = node.y;
+				
+				numSparseNodes = 0;
+				totalKarbonite = 0;
+				
+				while (!unvisited.isEmpty()) {
+					MapNode n = unvisited.removeFirst();
+					totalKarbonite += n.getKarbonite();
+					if (n.x < minx) minx = n.x;
+					else if (n.x > maxx) maxx = n.x;
+					if (n.y < miny) miny = n.y;
+					else if (n.y > maxy) maxy = n.y;
+					visited.add(n);
+					blob.add(n);
+					numNeighbours = 0;
+					for (MapNode neighbour : this.karboniteDeposits) {
+						// Karbonite within 1 move of another is considered the same blob
+						if (!visited.contains(neighbour) && neighbour != n && Math.abs(neighbour.x - n.x) <= 1 && Math.abs(neighbour.y - n.y) <= 1) {
+							numNeighbours++;
+							unvisited.push(neighbour);
+						}
+					}
+					
+					if (numNeighbours == 1 || numNeighbours == 2) {
+						numSparseNodes++;
+					}
+				}
+				double score = (1.0 - (double) numSparseNodes / blob.size()) * totalKarbonite / ((maxx - minx + 1) * (maxy - miny + 1));
+				// Insert in descending order
+				int i = 0;
+				try {
+					while (blobScores.get(i) > score) i++;
+				} catch (IndexOutOfBoundsException ex) {}
+				blobs.add(i, blob);
+				blobScores.add(i, score);
+			}
+		}
+		
+		this.karboniteBlobs = blobs;
+	}
+	
+	/**
+=======
+>>>>>>> master
 	 * Do a search for the nearest mapnode with contentTag matching targetChar
 	 * @param centerX 
 	 * @param centerY
@@ -320,9 +489,13 @@ public class FalconMap {
 	}
 	
 	public void printMap() {
+		char t = '0';
 		for (int i = 0; i < this.map.length; i++) {
 			for (int j = 0; j < this.map[0].length; j++) {
-				System.out.print(this.map[i][j].getTag());
+//				System.out.println("(" + j + ", " + i + ")|" + this.map[j][i].isPassable() + "|" + this.map[j][i].getTag());
+				t = this.map[i][j].getTag();
+				if (!this.map[i][j].isPassable() && t == '0') t = 'X';
+				System.out.print(t);
 			}
 			System.out.println();
 		}

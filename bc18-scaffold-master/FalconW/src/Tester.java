@@ -56,13 +56,23 @@ public class Tester {
 				char tag = '0';
 				MapNode n = new MapNode(j, i, 0, tag, m[i][j]);
 				map.map[i][j] = n;
-				map.updateNodeTag(j, i, tag);
+//				map.setKarbonite(j, i, m[i][j] ? 0 : (int) (Math.random() * 100), false);
+//				if (!m[i][j]) {
+//					map.karboniteDeposits.add(n);
+//				}
 			}
 		}
 		
-		map.updateNodeTag(10, 10, 'X');
 		map.printMap();
-		System.out.println(map.nodeContentMap);
+		System.out.println();
+//		map.initKarboniteBlobs();
+		
+		for (ArrayList<MapNode> a : map.karboniteBlobs) {
+			for (MapNode aa : a) {
+				System.out.print("["+aa.x+", "+aa.y+"]");
+			}
+			System.out.println();
+		}
 //		int[] ans = map.ringSearch(8, 20, '1');
 //		System.out.println(ans[0] + ", " + ans[1]);
 		
