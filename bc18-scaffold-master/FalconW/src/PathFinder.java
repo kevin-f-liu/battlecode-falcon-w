@@ -46,6 +46,9 @@ public class PathFinder {
 	private ArrayList<AStarNode> openSet;
 	public ArrayList<AStarNode> path;
 	
+	public PathFinder() {
+	}
+	
 	public PathFinder(FalconMap map) {
 		this.height = map.height;
 		this.width = map.width;

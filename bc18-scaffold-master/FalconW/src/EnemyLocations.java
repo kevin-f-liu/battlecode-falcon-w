@@ -8,6 +8,11 @@ public class EnemyLocations {
 	private PlayerUnits enemies;
 	private static Team ENEMY_TEAM;
 	
+	/**
+	 * Pass in a Parameter PlayerUnits instead of making a new one. 
+	 * @param gc
+	 * @param enemyTeam
+	 */
 	public EnemyLocations(GameController gc, Team enemyTeam){
 		
 		MapLocation loc = new MapLocation(gc.planet(), 0, 0);
