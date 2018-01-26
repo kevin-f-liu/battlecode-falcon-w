@@ -64,6 +64,7 @@ public class Player {
            
             // Mappings storing each type of unit
             HashMap<Integer, Unit> workers = myUnits.getWorkers();
+            ArrayList<Integer> workersInBlob = new ArrayList<Integer>();
             HashMap<Integer, Unit> factories = myUnits.getFactories();
             HashMap<Integer, Unit> rockets = myUnits.getRockets();
             MapLocation factoryLocation = null;
@@ -150,6 +151,17 @@ public class Player {
         		
         		// Mining logic
         		if (!rm.isBuildingStructure(unit)) {
+        			// Check worker ability heat
+        			if (unit.abilityHeat() < 10) {
+        				for (Direction dir : Direction.values()) {
+        					// Check if direction is valid
+        					if (gc.canReplicate(unit.id(), dir)) {
+        						gc.replicate(unit.id(), dir);
+        						System.out.println("REPLICATED");
+        					}
+        				}
+        			}
+        			
         			System.out.println(unit.id() + ": assigned to MINE");
 	        		// See if the worker is standing on karbonite that it is supposed to mine, if it is, mine it
             		boolean mining = false;
@@ -185,28 +197,36 @@ public class Player {
             		if (!mining) {
             			// Perform check that target karbonite is still there. If it isn't, search again
             			boolean targetKarboniteGone = false;
+            			MapLocation moveTarget = null;
             			try {
 	            			if (gc.karboniteAt(pf.getTarget()) == 0) {
 	            				targetKarboniteGone = true;
 	            			}
             			} catch (RuntimeException ex) {} // Don't care about checking a location outside vision
-            			if (!pf.isTargeting() || targetKarboniteGone) {
+            			if (!pf.isTargeting() || targetKarboniteGone) {            				
             				// Send units to different patches if havn't been touched yet
-            				MapLocation moveTarget = gameMap.getNextKarboniteBlobStart();
-            				System.out.println(unit.id() + ": Target after blob start: " + moveTarget);
+            				if (!workersInBlob.contains(unit.id())) {
+            					moveTarget = gameMap.getNextKarboniteBlobStart();
+                				System.out.println(unit.id() + ": Target after blob start: " + moveTarget);
+                				workersInBlob.add(unit.id());
+            				}
+            				
             				if (moveTarget == null) {
             					moveTarget = gameMap.searchForKarbonite(unitMapLocation.getX(), unitMapLocation.getY());
             				}
             				System.out.println(unit.id() + ": Target after circle search: " + moveTarget);
                 			
-                			pf.updateMap(gameMap);
-                			boolean getTarget = pf.target(unitMapLocation.getX(), unitMapLocation.getY(), moveTarget.getX(), moveTarget.getY());
-                			if (!getTarget) {
-                				System.out.println(unit.id() + " messed up targetting");
-                			}
-                			pf.printPath(unit.id()); // Print the path for debugging
+            				if (moveTarget != null) {
+            					// If targetting failed, don't try to find a path.
+	                			pf.updateMap(gameMap);
+	                			boolean getTarget = pf.target(unitMapLocation.getX(), unitMapLocation.getY(), moveTarget.getX(), moveTarget.getY());
+	                			if (getTarget) {
+	                				pf.printPath(unit.id()); // Print the path for debugging
+	                			} else {
+	                				System.out.println(unit.id() + " messed up targetting");
+	                			}	
+            				}
                 		}
-            			
             			
             			if (pf.isTargeting()) {
             				pf.recalculate(gameMap); // Update the game map for all the new units

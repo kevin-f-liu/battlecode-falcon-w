@@ -92,7 +92,14 @@ public class PathFinder {
 		for (int i = y - 1; i <= y + 1; i ++) {
 			for (int j = x - 1; j <= x + 1; j ++) {
 				if (j != x || i != y) {
-					if (j >= 0 && i >= 0 && i < this.height && j < this.width && (this.map[i][j].isPassable() || (j == this.endx && i == this.endy))) {
+					// A node is valid if it is on the map, not a wall, or not an enemyUnit
+					if (j >= 0 && 
+						i >= 0 && 
+						i < this.height && 
+						j < this.width && 
+						(this.map[i][j].isPassable() || 
+						 this.map[i][j].getUnitID() > 0 || 
+						 (j == this.endx && i == this.endy))) {
 						neighbours.add(this.map[i][j]);
 					}
 				}
@@ -110,7 +117,6 @@ public class PathFinder {
 	
 	public boolean target(int startx, int starty, int endx, int endy) {
 		// Basic call, specifies current location
-		this.targeting = true;
 		if (this.map == null) {
 			throw (new RuntimeException("You need to init a map first"));
 		}
@@ -216,6 +222,7 @@ public class PathFinder {
 			this.path.add(0, current);
 		}
 		this.current = this.path.get(0);
+		this.targeting = true; // Only targeting if path build was successful
 	}
 	
 	public ArrayList<int[]> getPath() {
@@ -287,7 +294,10 @@ public class PathFinder {
 				}
 				
 				// Update the neighbours gcost and set it's parent should it be cheaper to go from the current node
-				int gCostFromCurrent = currentNode.gCost + 1; // Always a cost of 1 to go anywhere
+				int nodeCost = 1; // Default is 1
+				if (n.getUnitID() > 0) nodeCost = 3; // Allow movement through our units but prefer not to
+				if (n.getUnitID() > 0 && n.isEnemyUnit()) nodeCost = 10; // Really prefer not to go through enemies
+				int gCostFromCurrent = currentNode.gCost + nodeCost; 
 				if (n.gCost > gCostFromCurrent || n.gCost == 0) {
 					n.parentNode = currentNode;
 					n.gCost = gCostFromCurrent;
