@@ -344,6 +344,7 @@ public class FalconMap {
 	public void initKarboniteBlobs() {
 		ArrayList<MapNode> visited = new ArrayList<MapNode>();
 		ArrayDeque<MapNode> unvisited = new ArrayDeque<MapNode>();
+		ArrayList<MapNode> toRemove = new ArrayList<MapNode>();
 
 		ArrayList<ArrayList<MapNode>> blobs = new ArrayList<ArrayList<MapNode>>();
 		ArrayList<Double> blobScores = new ArrayList<Double>();
@@ -392,9 +393,26 @@ public class FalconMap {
 				try {
 					while (blobScores.get(i) > score) i++;
 				} catch (IndexOutOfBoundsException ex) {}
-				blobs.add(i, blob);
-				blobScores.add(i, score);
+				
+				ArrayList<Integer> accessibleUnits = this.getClosestUnits(blob.get(0).x, blob.get(0).y, 'w');
+				if (accessibleUnits.size() == 0) {
+					System.out.println("BLOB: " + blob + " cannot be reached");
+					// Inaccessible karbonite is useless
+					for (MapNode badKarboniteNode : blob) {
+						badKarboniteNode.setKarbonite(0);
+						toRemove.add(badKarboniteNode);
+					}
+				} else {
+					System.out.println("BLOB: " + blob + " is good");
+					blobs.add(i, blob);
+					blobScores.add(i, score);
+				}
 			}
+		}
+		
+		// Remove bad karbonite nodes
+		for (MapNode n : toRemove) {
+			this.karboniteDeposits.remove(n);
 		}
 		
 		this.karboniteBlobs = blobs;
@@ -436,7 +454,8 @@ public class FalconMap {
 	}
 	
 	/**
-	 * Gets the unit ids of a specific tag in order of closest to furthest from a target x, y
+	 * Gets the unit ids of a specific tag in order of closest to furthest WALKABLE DISTANCE 
+	 * from a target x, y
 	 * Be careful to only call after calling update for that round
 	 * @param x x coordinate of target
 	 * @param y y coordinate of the target
@@ -463,19 +482,24 @@ public class FalconMap {
 		ArrayList<MapNode> visited = new ArrayList<MapNode>();
 		ArrayList<MapNode> neighbours = new ArrayList<MapNode>();
 		MapNode start = new MapNode(this.map[y][x]); // clone
+		start.setParent(start); // Self reference for target
 		
 		unvisited.add(start);
 		MapNode current;
 		// Should fill the temp map
 		while (!unvisited.isEmpty()) {
 			neighbours.clear();
-			current = unvisited.removeFirst(); // Nodes in unvisited are cloes of nodes in falconmap
+			current = unvisited.removeFirst(); // Nodes in unvisited are close of nodes in falconmap
 			
-			// Get all the neighbours
+			// Get all the neighbours in clockwise start top
 			if (this.isOnMap(current.x, current.y + 1)) neighbours.add(tempMap[current.y + 1][current.x]); // Up
+			if (this.isOnMap(current.x + 1, current.y + 1)) neighbours.add(tempMap[current.y + 1][current.x + 1]); // Topright
 			if (this.isOnMap(current.x + 1, current.y)) neighbours.add(tempMap[current.y][current.x + 1]); // Right
+			if (this.isOnMap(current.x + 1, current.y - 1)) neighbours.add(tempMap[current.y - 1][current.x + 1]); // Bottomright
 			if (this.isOnMap(current.x, current.y - 1)) neighbours.add(tempMap[current.y - 1][current.x]); // Down
+			if (this.isOnMap(current.x - 1, current.y - 1)) neighbours.add(tempMap[current.y - 1][current.x - 1]); // Bottomleft
 			if (this.isOnMap(current.x - 1, current.y)) neighbours.add(tempMap[current.y][current.x - 1]); // Left
+			if (this.isOnMap(current.x - 1, current.y + 1)) neighbours.add(tempMap[current.y + 1][current.x - 1]); // Topleft
 			for (MapNode n : neighbours) {
 				if ((n.isPassable() || n.getUnitID() > 0) && n.getParent() == null) {
 					n.setParent(current); // Have node reference parent
@@ -496,8 +520,12 @@ public class FalconMap {
 		// Iterate through all units of the given tag
 		for (MapNode n : this.nodeContentMap.get(tag)) {
 			MapNode backtrackCurrent = tempMap[n.y][n.x]; // Cloned node with parent reference
+			if (backtrackCurrent.getParent() == null) {
+				// Only happens when current location is not reachable from the target point
+				continue;
+			}
 			int pathLength = 0;
-			while (backtrackCurrent.parent != null) {
+			while (backtrackCurrent.getParent() != backtrackCurrent) {
 				backtrackCurrent = backtrackCurrent.parent;
 				pathLength++;
 			}	

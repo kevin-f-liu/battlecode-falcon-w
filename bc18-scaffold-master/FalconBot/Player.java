@@ -36,6 +36,21 @@ public class Player {
 		 map.updateKarbonite();
 	}
 	
+	public static void replicateIfPossible(GameController gc, Unit unit, HashMap<Integer, Unit> workers) {
+		// Check worker ability heat
+		if (unit.abilityHeat() < 10) {
+			for (Direction dir : Direction.values()) {
+				// Check if direction is valid
+				if (gc.canReplicate(unit.id(), dir)) {
+					gc.replicate(unit.id(), dir);
+					System.out.println(unit.id() + ": REPLICATED");
+					Unit newUnit = gc.senseUnitAtLocation(unit.location().mapLocation().add(dir));
+					workers.put(newUnit.id(), newUnit);
+				}
+			}
+		}
+	}
+	
 	public static void main(String[] args) {
         // Connect to the manager, starting the game
         GameController gc = new GameController();
@@ -52,7 +67,13 @@ public class Player {
  		HashMap<Integer, PathFinder> pathFinders = new HashMap<Integer, PathFinder>();
  		CombatManeuver combatDecisions = new CombatManeuver();
  		ResourceManagement rm = new ResourceManagement(gc);
+ 		ResearchManagement rem = new ResearchManagement(gc);
+ 		rem.createDefaultQueue(gc);
  		 		
+ 		int numKarboniteBlobs = gameMap.getKarboniteBlobs().size();
+ 		int numBuildingWorkers = 1;
+ 		int maxWorkers = 50; 
+ 		
         while (true) {
             System.out.println("Current round: "+gc.round());
             
@@ -96,6 +117,9 @@ public class Player {
              * 3. Go mine
              */
             for (Unit unit: workers.values()) {
+            	
+            	
+            	
 				MapLocation unitMapLocation = unit.location().mapLocation();
         		System.out.println(unit.id() + ": now at " + unitMapLocation + " | " + unit.team());
         		PathFinder pf; // Worker pathfinder init or get
@@ -151,16 +175,6 @@ public class Player {
         		
         		// Mining logic
         		if (!rm.isBuildingStructure(unit)) {
-        			// Check worker ability heat
-        			if (unit.abilityHeat() < 10) {
-        				for (Direction dir : Direction.values()) {
-        					// Check if direction is valid
-        					if (gc.canReplicate(unit.id(), dir)) {
-        						gc.replicate(unit.id(), dir);
-        						System.out.println("REPLICATED");
-        					}
-        				}
-        			}
         			
         			System.out.println(unit.id() + ": assigned to MINE");
 	        		// See if the worker is standing on karbonite that it is supposed to mine, if it is, mine it
@@ -239,7 +253,13 @@ public class Player {
 	            			}
             			}
             		}
-            	} 	
+            	} 
+        		
+        		// Replicate until the number of workers is at least the number of karbonite patches
+        		// Done at the end becasue you can move replicate, not replicate move
+            	if (workers.values().size() < numKarboniteBlobs + numBuildingWorkers) {
+            		replicateIfPossible(gc, unit, workers);
+            	}
             }
             
 //            /**
