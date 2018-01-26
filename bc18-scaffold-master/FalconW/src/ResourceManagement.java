@@ -1,31 +1,41 @@
 import java.util.HashMap;
 
 import bc.*;
+import java.util.ArrayList;
 
 // Class that serves to make Macro Decisions on Player's Resource Management
 public class ResourceManagement {
 
+	//================================================================================
+	// Properties
+	//================================================================================
+	
+	// Percentage of karbonite allocated for combat
+	public static final int COMBAT_KARBONITE_PERCENT = 50;
+	
 	private GameController gc;
 	private FalconMap gameMap;
+	private ArrayList<StructuresInfo> structures;
 	private HashMap<Integer, Unit> workers;
 	private HashMap<Integer, Unit> factories;
 	private HashMap<Integer, Unit> rockets;
-	
-	public static final int NUM_WORKERS_FOR_STRUCTURE = 4;
-	public static final int COMBAT_KARBONITE_PERCENT = 50;
-	private static boolean structureQueued;
-	private int workersForStructure;
-	private MapLocation[] targetSquaresAroundStructure;
-	private static Unit currentStructure;
-	private static MapLocation currentStructureLocation;
-	private static boolean savingForStructure;
-	private static int karboniteToSave;
-	private HashMap<Integer, Unit> buildingWorkers;
+
+	//================================================================================
+	// Constructors
+	//================================================================================
 	
 	public ResourceManagement(GameController gc) {
 		this.gc = gc;
-		buildingWorkers = new HashMap<Integer, Unit>();
+		this.gameMap = new FalconMap(gc);
+		this.structures = new ArrayList<StructuresInfo>();
+		this.workers = new HashMap<Integer, Unit>();
+		this.factories = new HashMap<Integer, Unit>();
+		this.rockets = new HashMap<Integer, Unit>();
 	}
+	
+	//================================================================================
+	// Public functions
+	//================================================================================
 	
 	/**
 	 * Updates resource manager with current round info
@@ -44,119 +54,68 @@ public class ResourceManagement {
 		this.factories = factories;
 		this.rockets = rockets;
 	}
-	
-	/**
-	 * Checks if structure is in queue
-	 * 
-	 * @return True if structure is needed, false otherwise.
-	 */
-	public boolean structureQueued() {
-		return structureQueued;
-	}
-	
-	/**
-	 * Gets the list of workers designated for structure building
-	 * 
-	 * @return The list of workers to build structure
-	 */
-	public HashMap<Integer, Unit> getBuildingWorkers() {
-		return buildingWorkers;
-	}
-	
-	/**
-	 * Gets the number of additional workers needed to build structure
-	 * 
-	 * @return The number of additional workers required
-	 */
-	public int workersForStructure() {
-		return this.workersForStructure;
-	}
-	
-	/**
-	 * Decreases workersForStructure by 1
-	 */
-	public void decreaseWorkersForStructure() {
-		if (this.workersForStructure > 0 ) {
-			this.workersForStructure--;
-		}
-	}
-	
-	/**
-	 * Gets the target squares to which workers should be directed
-	 * to build factory
-	 * 
-	 * @return Array of MapLocation of free adjacent squares to target location
-	 */
-	public MapLocation[] getSquaresAroundStructure() {
-		return this.targetSquaresAroundStructure;
-	}
-	
-	/**
-	 * Gets MapLocation of the structure that is currently in build
-	 * 
-	 * @return MapLocation of current structure in build
-	 */
-	public MapLocation getCurrentStructureLocation() {
-		return currentStructureLocation;
-	}
-	
-	/**
-	 * Gets the structure that is currently in build
-	 * 
-	 * @return Unit object of current structure in build
-	 */
-	public Unit getCurrentStructure() {
-		return currentStructure;
-	}
-	
-	/**
-	 * Sets currentStructure to be the structure that is currently in build
-	 */
-	private void setCurrentStructure() {
-		for (int i = 0; i < gc.myUnits().size(); i++) {
-			Unit curr = gc.myUnits().get(i);
-			if (curr.unitType() == UnitType.Factory || curr.unitType() == UnitType.Rocket) {
-				if (curr.structureIsBuilt() == 0)
-				currentStructure = curr;
-			}
-		}
-		System.out.println("Current structure in build: " + currentStructure);
-	}
-	
-	/**
-	 * Checks if currently saving up karbonite to build structure
-	 * 
-	 * @return True if saving, false otherwise.
-	 */
-	public boolean isSavingForStructure() {
-		return savingForStructure;
-	}
-	
-	/**
-	 * Gets the number of karbonite to save up to build future structure
-	 * 
-	 * @return Karbonite required
-	 */
-	public int karboniteToSave() {
-		return karboniteToSave;
-	}
-	
+
 	/**
 	 * Gets the maximum amount of karbonite to be used for combat
 	 * 
 	 * @return Amount of karbonite allowed
 	 */
 	public int karboniteForCombat() {
-		return (savingForStructure ? 0 : (int)gc.karbonite() * COMBAT_KARBONITE_PERCENT / 100);
+		return (isSavingForStructure() ? 0 : (int)gc.karbonite() * COMBAT_KARBONITE_PERCENT / 100);
+	}
+
+	/**
+	 * Determines if currently building structures
+	 * 
+	 * @return True if there are structures to be built, false otherwise.
+	 */
+	public boolean isBuildingStructures() {
+		for (StructuresInfo structure : structures) {
+			if (structure.getStructureStatus() != StructuresInfo.Status.Complete) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	/**
-	 * Replicates requested number of workers from existing workers.
+	 * Determines if currently saving up karbonite to build structures
 	 * 
-	 * @param number of workers requested
+	 * @return True if there are structures planned but not yet blueprinted, false otherwise.
 	 */
-	public void replicate(int workersRequested) {
-		long workersToReplicate = Math.min(workersRequested, gc.karbonite() / bc.bcUnitTypeReplicateCost(UnitType.Worker));
+	public boolean isSavingForStructure() {
+		for (StructuresInfo structure : structures) {
+			if (structure.getStructureStatus() == StructuresInfo.Status.Planned 
+				|| structure.getStructureStatus() == StructuresInfo.Status.Targeted) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 * Determines the amount of karbonite to save up to build future structure
+	 * 
+	 * @return Amount of karbonite to save
+	 */
+	public int karboniteToSave() {
+		int amount = 0;
+		for (StructuresInfo structure : structures) {
+			if (structure.getStructureStatus() == StructuresInfo.Status.Planned 
+					|| structure.getStructureStatus() == StructuresInfo.Status.Targeted) {
+				amount += bc.bcUnitTypeBlueprintCost(structure.getStructureType());
+			}
+		}
+		return amount;
+	}
+	
+	/**
+	 * Replicates workers from existing workers, if required
+	 */
+	public void replicate() {
+		long workersToReplicate = Math.min(workersRequired(), gc.karbonite() / bc.bcUnitTypeReplicateCost(UnitType.Worker));
+		System.out.println("Workers required: " + workersRequired());
+		System.out.println("Workers to replicate: " + workersToReplicate);
 		if (workersToReplicate < 1) {
 			return;
 		}
@@ -168,7 +127,7 @@ public class ResourceManagement {
 					// Check if direction is valid
 					if (gc.canReplicate(w.id(), dir)) {
 						gc.replicate(w.id(), dir);
-						System.out.println("REPLICATED");
+						System.out.println("Worker replicated.");
 						workersToReplicate--;
 						if (workersToReplicate < 1) {
 							return;
@@ -178,16 +137,149 @@ public class ResourceManagement {
 			}
 		}
 	}
+	
+	/**
+	 * Direct workers to build factories, if required
+	 */
+	public void buildFactories() {
+		int factoriesNeeded = factoriesRequired();
+		System.out.println("Factories needed: " + factoriesNeeded);
+		if (factoriesNeeded <= 0) {
+			return;
+		}
+		while (factoriesNeeded > 0) {
+			StructuresInfo structureInfo = new StructuresInfo(gc, gameMap);
+			structureInfo.setStructureType(UnitType.Factory);
+			structureInfo.setStructureLocation(getOptimalFactoryLocation());
+			structureInfo.setStructureStatus(StructuresInfo.Status.Planned);
+			structures.add(structureInfo);
+			factoriesNeeded--;
+		}
+	}
 
+	/**
+	 * Checks if unit is assigned to structure building duty
+	 * 
+	 * @param Unit to check
+	 * 
+	 * @return True if worker is assigned to build structure, false otherwise.
+	 */
+	public boolean isBuildingStructure(int id) {
+		for (StructuresInfo structure : structures) {
+			if (structure.getAssignedWorkersID().contains(id)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 * Checks if workers need to be assigned to structure building duty
+	 * 
+	 * @return True if additional workers needed, false otherwise (or if not enough karbonite).
+	 */
+	public boolean needWorkersForStructure() {
+		for (StructuresInfo structure : structures) {
+			// If enough karbonite is available but structure is not blueprinted
+			if (structure.getStructureStatus() == StructuresInfo.Status.Planned
+					&& getFreeKarbonite() >= bc.bcUnitTypeBlueprintCost(structure.getStructureType())) {
+				return true;
+			}
+			// If structure is in build but not enough workers are assigned to it
+			if ( ( structure.getStructureStatus() == StructuresInfo.Status.Blueprinted
+					|| structure.getStructureStatus() == StructuresInfo.Status.Targeted )
+					&& structure.getAssignedWorkersID().size() < StructuresInfo.NUM_WORKERS_FOR_STRUCTURE) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	/**
+	 * Determines the next structure to work on
+	 * 
+	 * @param Unit ID
+	 * 
+	 * @return MapLocation of next structure that requires workers
+	 */
+	public MapLocation findNextStructureTarget(int workerID) {
+		for (StructuresInfo structure : structures) {
+			switch (structure.getStructureStatus()) {
+				case Complete:
+					break;
+				case Targeted:
+				case Blueprinted: 
+					if (structure.getAssignedWorkersID().size() < StructuresInfo.NUM_WORKERS_FOR_STRUCTURE
+						&& !structure.getFreeSquaresAroundStructure().isEmpty()) {
+						structure.assignWorker(workerID);
+						return structure.getFreeSquaresAroundStructure().get(0);
+					}
+				case Planned: 
+					if (getFreeKarbonite() >= bc.bcUnitTypeBlueprintCost(structure.getStructureType())
+						&& !structure.getFreeSquaresAroundStructure().isEmpty()) {
+						structure.advanceProductionCycle();
+						structure.assignWorker(workerID);
+						return structure.getFreeSquaresAroundStructure().get(0);
+					}
+				default:
+					break;
+				
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Determines the structure that the unit is assigned to
+	 * 
+	 * @param Unit ID
+	 * 
+	 * @return StructuresInfo of the structure
+	 */
+	public StructuresInfo findAssignedStructure(int workerID) {
+		for (StructuresInfo structure : structures) {
+			if (structure.getAssignedWorkersID().contains(workerID)) {
+				return structure;
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Assign structure task to indicated worker
+	 * 
+	 * @param Unit
+	 */
+	public void assignTask(Unit unit) {
+		StructuresInfo structure = findAssignedStructure(unit.id());
+		switch (structure.getStructureStatus()) {
+			case Complete: structure.completeStructure();
+				break;
+			case Blueprinted: structure.build(unit);
+				break;
+			case Targeted: structure.blueprint(unit);
+				break;
+			case Planned: structure.blueprint(unit);
+				break;
+			default:
+				break;
+		}
+	}
+	
+	//================================================================================
+	// Private functions
+	//================================================================================
+	
 	/**
 	 * Determines the number of additional workers required according
 	 * to round-dependent function.
 	 * 
 	 * @return Number of workers required.
 	 */
-	public int workersRequired() {
+	private int workersRequired() {
 		// Function for the minimum number of workers required depends on planet
-		int minWorkers = (gc.planet() == Planet.Earth ? (int)gc.round() / 50 + 10 : (int)gc.round() / 50 - 10);
+		int minWorkers = (gc.planet() == Planet.Earth ? (int)gc.round() / 30 + 10 : (int)gc.round() / 50 - 10);
+		System.out.println("minWorkers: " + minWorkers + ", workers.size() = " + workers.size());
 		return Math.max(0, minWorkers - workers.size());
 	}
 	
@@ -197,114 +289,17 @@ public class ResourceManagement {
 	 * 
 	 * @return Number of factories required.
 	 */
-	public int factoriesRequired() {
+	private int factoriesRequired() {
 		int minFactories = (int)gc.round() / 20 + 1;
-		return Math.max(0, minFactories - factories.size());
-	}
-	
-	/**
-	 * Finds optimal location for new factory
-	 * 
-	 * @return MapLocation of the factory
-	 */
-	public MapLocation getOptimalFactoryLocation() {	
-		MapLocation startingCorner = getStartingCorner();
-		int diagonalDist = (int) Math.sqrt(Math.pow(gameMap.height, 2) + Math.pow(gameMap.width, 2)) + 1;
-
-		// Loop through squares within incrementing radii of starting corner
-		for (int dist = 1; dist <= diagonalDist; dist++) {
-			// Add all squares within radius to list
-			VecMapLocation squaresToCheck = gc.allLocationsWithin(startingCorner, dist*dist);
-			for (int i = 0; i < squaresToCheck.size(); i++) {
-				MapLocation target = squaresToCheck.get(i);
-				// Only check squares in outer radius belt because others 
-				// have been checked in previous iterations
-				if (!target.isWithinRange((dist-1)*(dist-1) , startingCorner) && canBuildFactory(target)) {
-					return target;
-				}
-			}
-		}		
-		return null;
-	}
-	
-	/**
-	 * Direct workers to build a factory at targeted MapLocation
-	 * 
-	 * @param Requested MapLocation
-	 */
-	public void startFactoryBuild() {
-		MapLocation target = getOptimalFactoryLocation();
-		currentStructureLocation = target;
-		this.workersForStructure = NUM_WORKERS_FOR_STRUCTURE;
-    	structureQueued = true;
-    	this.targetSquaresAroundStructure = getFreeAdjSquares(target, NUM_WORKERS_FOR_STRUCTURE);
-    	savingForStructure = true;
-    	karboniteToSave = (int) bc.bcUnitTypeBlueprintCost(UnitType.Factory);
-	}
-	
-	/**
-	 * Direct worker to blueprint factory
-	 * 
-	 * @param Worker 
-	 */
-	public void blueprintFactory(Unit worker) {
-		Direction dir = worker.location().mapLocation().directionTo(currentStructureLocation);
-		if (gc.canBlueprint(worker.id(), UnitType.Factory, dir)) {
-			gc.blueprint(worker.id(), UnitType.Factory, dir);
-			savingForStructure = false;
-	    	karboniteToSave = 0;
-	    	System.out.println("Blueprint complete at " + currentStructureLocation.getX() + ", " + currentStructureLocation.getY());
-			setCurrentStructure();
-			System.out.println("Setting current structure: " + getCurrentStructure());
-		}
-	}
-	
-	/**
-	 * Direct worker to build blueprint
-	 * 
-	 * @param Worker 
-	 * @param MapLocation of Factory
-	 */
-	public void buildFactory(Unit worker, MapLocation target) {
-		Unit blueprint = currentStructure;
-		if (gc.canBuild(worker.id(), blueprint.id())) {
-			gc.build(worker.id(), blueprint.id());
-			System.out.println("worker " + worker.id() + " building blueprint");
-		}
-	}
-	
-	/**
-	 * Gets free adjacent squares to target MapLocation
-	 * 
-	 * @param Requested MapLocation
-	 * @param Number of squares needed
-	 * 
-	 * @return MapLocation array of adjacent squares
-	 */
-	public MapLocation[] getFreeAdjSquares(MapLocation target, int numSquares) {
-		MapLocation[] freeAdjSquares = new MapLocation[numSquares];
-		int index = 0;
-		
-		for (Direction dir : Direction.values()) {
-			int adjX = target.add(dir).getX();
-			int adjY = target.add(dir).getY();
-			
-			if (dir != Direction.Center && gameMap.isOnMap(adjX, adjY) && gameMap.isPassable(adjX, adjY)) {
-				freeAdjSquares[index] = target.add(dir);
-				index++;
-			}
-			
-			if (index >= freeAdjSquares.length) {
-				return freeAdjSquares;
+		int factoriesNeeded = Math.max(0, minFactories - factories.size());
+		for (int i = 0; i < structures.size(); i++) {
+			if (structures.get(i).getStructureType() == UnitType.Factory 
+					&& ( structures.get(i).getStructureStatus() == StructuresInfo.Status.Planned
+					|| structures.get(i).getStructureStatus() == StructuresInfo.Status.Targeted ) ) {
+				factoriesNeeded--;
 			}
 		}
-		
-		while (index < freeAdjSquares.length) {
-			freeAdjSquares[index] = null;
-			index++;
-		}
-		
-		return freeAdjSquares;
+		return factoriesNeeded;
 	}
 	
 	/**
@@ -312,7 +307,7 @@ public class ResourceManagement {
 	 * 
 	 * @return array of corner MapLocations
 	 */
-	public MapLocation[] getCorners() {
+	private MapLocation[] getCorners() {
 		MapLocation corners[] = new MapLocation[4];
 		corners[0] = new MapLocation(Planet.Earth, 0, 0);
 		corners[1] = new MapLocation(Planet.Earth, 0, gameMap.width - 1);
@@ -327,7 +322,7 @@ public class ResourceManagement {
 	 * 
 	 * @return MapLocation of closest map corner
 	 */
-	public MapLocation getStartingCorner() {
+	private MapLocation getStartingCorner() {
 		PlanetMap earthMap_initial = gc.startingMap(Planet.Earth);
 		VecUnit startingUnits = earthMap_initial.getInitial_units();
 		int minDistance = Integer.MAX_VALUE;
@@ -353,7 +348,7 @@ public class ResourceManagement {
 	 * 
 	 * @return True if square meets criteria, false otherwise. 
 	 */
-	public boolean canBuildFactory(MapLocation target) {
+	private boolean canBuildFactory(MapLocation target) {
 		int x = target.getX();
 		int y = target.getY();
 		
@@ -366,13 +361,20 @@ public class ResourceManagement {
 			return false;
 		}
 		
+		// Do not build adjacent structures
+		for (StructuresInfo structure : structures) {
+			if (structure.getStructureLocation().isAdjacentTo(target) ) {
+				return false;
+			}
+		}
+		
 		// Count number of free adjacent squares
 		for (Direction dir : Direction.values()) {
 			int adjX = target.add(dir).getX();
 			int adjY = target.add(dir).getY();
 			
 			if (gameMap.isOnMap(adjX, adjY) && gameMap.isPassable(adjX, adjY)) {
-				// Do not build adjacent structures
+				// Do not build adjacent structures (including check for enemy structures)
 				if (gameMap.getNodetag(adjX, adjY) == 'f' || gameMap.getNodetag(adjX, adjY) == 'r') {
 					return false;
 				}
@@ -383,46 +385,46 @@ public class ResourceManagement {
 		if (freeAdjSquares >= minFreeAdjSquares) {
 			return true;
 		}
-		
 		return false;
 	}
 	
 	/**
-	 * Designate worker to build structure
+	 * Finds optimal location for new factory
 	 * 
-	 * @param Designated worker
+	 * @return MapLocation of the factory
 	 */
-	public void setWorkerToBuild(Unit worker) {
-		if (!worker.unitType().equals(UnitType.Worker)) {
-			return;
-		}
-		if (buildingWorkers.size() < NUM_WORKERS_FOR_STRUCTURE) {
-			buildingWorkers.put(worker.id(), worker);
-		}
+	private MapLocation getOptimalFactoryLocation() {	
+		MapLocation startingCorner = getStartingCorner();
+		int diagonalDist = (int) Math.sqrt(Math.pow(gameMap.height, 2) + Math.pow(gameMap.width, 2)) + 1;
+
+		// Loop through squares within incrementing radii of starting corner
+		for (int dist = 1; dist <= diagonalDist; dist++) {
+			// Add all squares within radius to list
+			VecMapLocation squaresToCheck = gc.allLocationsWithin(startingCorner, dist*dist);
+			for (int i = 0; i < squaresToCheck.size(); i++) {
+				MapLocation target = squaresToCheck.get(i);
+				// Only check squares in outer radius belt because others 
+				// have been checked in previous iterations
+				if (!target.isWithinRange((dist-1)*(dist-1) , startingCorner) && canBuildFactory(target)) {
+					return target;
+				}
+			}
+		}		
+		return null;
 	}
 	
 	/**
-	 * Checks if unit is designated to build structure
+	 * Total karbonite - amount blocked off for targeted structure build
 	 * 
-	 * @param Unit to check
-	 * 
-	 * @return True if worker is designated to build structure, false otherwise.
+	 * @return Amount of available karbonite
 	 */
-	public boolean isBuildingStructure(Unit unit) {
-		return buildingWorkers.containsKey(unit.id());
-	}
-	
-	/**
-	 * Reset structure related tags when build is complete
-	 */
-	public void completeStructure() {
-		structureQueued = false;
-		workersForStructure = 0;
-		targetSquaresAroundStructure = null;
-		currentStructure = null;
-		currentStructureLocation = null;
-		savingForStructure = false;
-		karboniteToSave = 0;
-		buildingWorkers.clear();
+	private int getFreeKarbonite() {
+		int reserved = 0;
+		for (StructuresInfo structure : structures) {
+			if (structure.getStructureStatus() == StructuresInfo.Status.Targeted) {
+				reserved += bc.bcUnitTypeBlueprintCost(structure.getStructureType());
+			}
+		}
+		return Math.max(0, (int) gc.karbonite() - reserved);
 	}
 }

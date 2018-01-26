@@ -60,35 +60,27 @@ public class Player {
             VecUnit myVecUnits = gc.myUnits(); // Grab just our units
             PlayerUnits myUnits = new PlayerUnits(myVecUnits, OUR_TEAM);
             updateMap(gameMap, units); // Update unit locations and karbonite
-            myUnits.checkNewUnits(units); // Update new unit references
+            myUnits.checkNewUnits(myVecUnits); // Update new unit references
             EnemyLocations enemies = new EnemyLocations(gc, ENEMY_TEAM); // grab a list of enemy locations
             
             // Mappings storing each type of unit
             HashMap<Integer, Unit> workers = myUnits.getWorkers();
             HashMap<Integer, Unit> factories = myUnits.getFactories();
             HashMap<Integer, Unit> rockets = myUnits.getRockets();
-            MapLocation factoryLocation = null;
+
             rm.updateRM(gameMap, workers, factories, rockets); // Update the resource manager
             
-            MapLocation[] workerLocationsForFactory = new MapLocation[ResourceManagement.NUM_WORKERS_FOR_STRUCTURE]; // Init to 4 locations per factory
+            // Worker replication Logic
+            rm.replicate();
             
-            System.out.println("workersRequired: " + rm.workersRequired());
-            
-            /**
-             * Replication Logic
-             */
-            if (rm.workersRequired() > 0) {
-            	rm.replicate(rm.workersRequired());
-            }
-            
-            /**
-             * Decide when to build factories
-             */
-            if (rm.factoriesRequired() > 0) {
-            	rm.startFactoryBuild();
-            	workerLocationsForFactory = rm.getSquaresAroundStructure();
-            }
+            // Factory build logic
+            rm.buildFactories();
 
+//            // Rocket build logic
+//            if (rm.rocketsRequired() > 0) {
+//            	rm.buildRocket();
+//            }
+            
             /**
              * Worker logic
              * 1. Init pathfinder for each worker
@@ -109,48 +101,47 @@ public class Player {
         		}
             	
         		// Target the worker's pathfinder to the build location
-        		if (rm.structureQueued() && rm.workersForStructure() > 0 && !rm.isBuildingStructure(unit)) {
-        			MapLocation target = workerLocationsForFactory[ResourceManagement.NUM_WORKERS_FOR_STRUCTURE - rm.workersForStructure()];
-        			System.out.println(unit.id() + ": BUILD target (" + target.getX() + ", " + target.getY() + ")");
+        		System.out.println("rm.isBuildingStructures() : "+ rm.isBuildingStructures());
+        		System.out.println("rm.needWorkersForStructure() : "+ rm.needWorkersForStructure());
+        		if (rm.isBuildingStructures() && rm.needWorkersForStructure() && !rm.isBuildingStructure(unit.id())) {
+        			MapLocation target = rm.findNextStructureTarget(unit.id());
         			if (target != null) {
+        				System.out.println(unit.id() + ": BUILD target (" + target.getX() + ", " + target.getY() + ")");
         				 pf.updateMap(gameMap);
         				 pf.target(unitMapLocation.getX(), unitMapLocation.getY(), target.getX(), target.getY());
-        				 rm.setWorkerToBuild(unit);
         			}
-        			rm.decreaseWorkersForStructure();
         		}
             	
         		// Logic to handle travel and building
-        		if (rm.isBuildingStructure(unit)) {
+        		if (rm.isBuildingStructure(unit.id())) {
         			System.out.println(unit.id() + ": assigned to BUILD");
+        			StructuresInfo currStruct = rm.findAssignedStructure(unit.id());
         			// Advancing with the pathfinder
         			if (pf.isTargeting()) {
         				 // Move
             			 Direction next = pf.nextStep();
             			 if (next != null && gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), next)) {
-            			  	gc.moveRobot(unit.id(), next);
-            				pf.advanceStep();
+            				 gameMap.updateUnits(units);
+            				 for (MapLocation loc : currStruct.getFreeSquaresAroundStructure()) {
+            					 if (loc.isAdjacentTo(unitMapLocation)) {
+//            						 pf.target(unitMapLocation.getX(), unitMapLocation.getY(), loc.getX(), loc.getY());
+//            						 next = pf.nextStep();
+            						 next = unitMapLocation.directionTo(loc);
+            						 pf.targeting = false;
+            					 }
+            				 }
+            			  	 gc.moveRobot(unit.id(), next);
+            				 // pf.advanceStep();
             			 }
         			}
-        			// Reached destination but have not blueprinted
-        			else if (rm.isSavingForStructure()) {
-        				System.out.println(unit.id() + ": reached destination for structure, blueprinting " + gc.unit(unit.id()).location().mapLocation());
-        				rm.blueprintFactory(unit);
-        			}
-        			// Build complete
-        			else if (rm.getCurrentStructure().structureIsBuilt() > 0) {
-        				rm.completeStructure();
-        				System.out.println("Structure completed");
-            		}
-        			// Blueprinted but not build
-        			else {
-        				System.out.print(unit.id() + ": building factory");
-        				rm.buildFactory(unit, factoryLocation);
+        			// Reached destination
+        			else if (unitMapLocation.isAdjacentTo(currStruct.getStructureLocation())) {
+        				System.out.println(unit.id() + ": reached destination for structure " + gc.unit(unit.id()).location().mapLocation());
+        				pf.targeting = false;
+        				rm.assignTask(unit);
         			}
         		} 
-        		
-        		// Mining logic
-        		if (!rm.isBuildingStructure(unit)) {
+        		else {
         			System.out.println(unit.id() + ": assigned to MINE");
 	        		// See if the worker is standing on karbonite that it is supposed to mine, if it is, mine it
             		boolean mining = false;
