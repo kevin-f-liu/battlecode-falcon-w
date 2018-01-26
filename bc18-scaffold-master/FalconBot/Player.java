@@ -52,7 +52,7 @@ public class Player {
  		HashMap<Integer, PathFinder> pathFinders = new HashMap<Integer, PathFinder>();
  		CombatManeuver combatDecisions = new CombatManeuver();
  		ResourceManagement rm = new ResourceManagement(gc);
- 		
+ 		 		
         while (true) {
             System.out.println("Current round: "+gc.round());
             
@@ -60,13 +60,8 @@ public class Player {
             VecUnit myVecUnits = gc.myUnits(); // Grab just our units
             PlayerUnits myUnits = new PlayerUnits(myVecUnits, OUR_TEAM);
             updateMap(gameMap, units); // Update unit locations and karbonite
-            myUnits.checkNewUnits(units); // Update new unit references
             EnemyLocations enemies = new EnemyLocations(gc, ENEMY_TEAM); // grab a list of enemy locations
-            
-            // TEST
-            System.out.println("trying to get closeest units");
-            System.out.println(gameMap.getClosestUnits(0, 0, 'w'));
-            
+           
             // Mappings storing each type of unit
             HashMap<Integer, Unit> workers = myUnits.getWorkers();
             HashMap<Integer, Unit> factories = myUnits.getFactories();
@@ -81,9 +76,9 @@ public class Player {
             /**
              * Replication Logic
              */
-            if (rm.workersRequired() > 0) {
-            	rm.replicate(rm.workersRequired());
-            }
+//            if (rm.workersRequired() > 0) {
+//            	rm.replicate(rm.workersRequired());
+//            }
             
             /**
              * Decide when to build factories
@@ -101,7 +96,7 @@ public class Player {
              */
             for (Unit unit: workers.values()) {
 				MapLocation unitMapLocation = unit.location().mapLocation();
-        		System.out.println(unit.id() + ": now at " + unitMapLocation);
+        		System.out.println(unit.id() + ": now at " + unitMapLocation + " | " + unit.team());
         		PathFinder pf; // Worker pathfinder init or get
         		if (!pathFinders.containsKey(new Integer(unit.id()))) {
         			// Add to map if new unit
@@ -112,46 +107,46 @@ public class Player {
         			pf = pathFinders.get(unit.id());
         		}
             	
-        		// Target the worker's pathfinder to the build location
-        		if (rm.structureQueued() && rm.workersForStructure() > 0 && !rm.isBuildingStructure(unit)) {
-        			MapLocation target = workerLocationsForFactory[ResourceManagement.NUM_WORKERS_FOR_STRUCTURE - rm.workersForStructure()];
-        			System.out.println(unit.id() + ": BUILD target (" + target.getX() + ", " + target.getY() + ")");
-        			if (target != null) {
-        				 pf.updateMap(gameMap);
-        				 pf.target(unitMapLocation.getX(), unitMapLocation.getY(), target.getX(), target.getY());
-        				 rm.setWorkerToBuild(unit);
-        			}
-        			rm.decreaseWorkersForStructure();
-        		}
-            	
-        		// Logic to handle travel and building
-        		if (rm.isBuildingStructure(unit)) {
-        			System.out.println(unit.id() + ": assigned to BUILD");
-        			// Advancing with the pathfinder
-        			if (pf.isTargeting()) {
-        				 // Move
-            			 Direction next = pf.nextStep();
-            			 if (next != null && gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), next)) {
-            			  	gc.moveRobot(unit.id(), next);
-            				pf.advanceStep();
-            			 }
-        			}
-        			// Reached destination but have not blueprinted
-        			else if (rm.isSavingForStructure()) {
-        				System.out.println(unit.id() + ": reached destination for structure, blueprinting " + gc.unit(unit.id()).location().mapLocation());
-        				rm.blueprintFactory(unit);
-        			}
-        			// Build complete
-        			else if (rm.getCurrentStructure().structureIsBuilt() > 0) {
-        				rm.completeStructure();
-        				System.out.println("Structure completed");
-            		}
-        			// Blueprinted but not build
-        			else {
-        				System.out.print(unit.id() + ": building factory");
-        				rm.buildFactory(unit, factoryLocation);
-        			}
-        		} 
+//        		// Target the worker's pathfinder to the build location
+//        		if (rm.structureQueued() && rm.workersForStructure() > 0 && !rm.isBuildingStructure(unit)) {
+//        			MapLocation target = workerLocationsForFactory[ResourceManagement.NUM_WORKERS_FOR_STRUCTURE - rm.workersForStructure() * factories.size()];
+//        			System.out.println(unit.id() + ": build target (" + target.getX() + ", " + target.getY() + ")");
+//        			if (target != null) {
+//        				 pf.updateMap(gameMap);
+//        				 pf.target(unitMapLocation.getX(), unitMapLocation.getY(), target.getX(), target.getY());
+//        				 rm.setWorkerToBuild(unit);
+//        			}
+//        			rm.decreaseWorkersForStructure();
+//        		}
+//            	
+//        		// Logic to handle travel and building
+//        		if (rm.isBuildingStructure(unit)) {
+//        			System.out.println(unit.id() + ": assigned to BUILD");
+//        			// Advancing with the pathfinder
+//        			if (pf.isTargeting()) {
+//        				 // Move
+//            			 Direction next = pf.nextStep();
+//            			 if (next != null && gc.isMoveReady(unit.id()) && gc.canMove(unit.id(), next)) {
+//            			  	gc.moveRobot(unit.id(), next);
+//            				pf.advanceStep();
+//            			 }
+//        			}
+//        			// Reached destination but have not blueprinted
+//        			else if (rm.isSavingForStructure()) {
+//        				System.out.println(unit.id() + ": reached destination for structure, blueprinting " + gc.unit(unit.id()).location().mapLocation());
+//        				rm.blueprintFactory(unit);
+//        			}
+//        			// Build complete
+//        			else if (rm.getCurrentStructure().structureIsBuilt() > 0) {
+//        				rm.completeStructure();
+//        				System.out.println("Structure completed");
+//            		}
+//        			// Blueprinted but not build
+//        			else {
+//        				System.out.print(unit.id() + ": building factory");
+//        				rm.buildFactory(unit, factoryLocation);
+//        			}
+//        		} 
         		
         		// Mining logic
         		if (!rm.isBuildingStructure(unit)) {
@@ -161,12 +156,28 @@ public class Player {
             		System.out.println(unit.id() + ": Standing on " + gc.karboniteAt(unitMapLocation) + "k");
             		
             		// Mining
-            		if (gc.karboniteAt(unitMapLocation) > 0 && unitMapLocation.equals(pf.getTarget())) {
-            			System.out.println(unit.id() + ": Mining karbonite | " + gc.karboniteAt(unitMapLocation));
-            			mining = true;
-            			gc.harvest(unit.id(), Direction.Center);
-            			if (gc.karboniteAt(unitMapLocation) == 0) {
-            				System.out.println("Ran out of karbonite at " + unitMapLocation);
+            		MapLocation target = pf.getTarget();
+            		Direction directionToTarget = unitMapLocation.directionTo(target);
+            		double karboniteAtTarget = 0;
+            		try {
+            			karboniteAtTarget = gc.karboniteAt(target);
+            		} catch (RuntimeException e) {} // Ignore if  is out of vision range.
+            		if (karboniteAtTarget > 0) {
+            			// If the worker is on the karbonite, mine it
+            			if (directionToTarget == Direction.Center) {
+            				mining = true;
+            			}
+            			// If the target is covered and the worker is adjacent, mine it
+            			if (unitMapLocation.isAdjacentTo(target) && !gc.canMove(unit.id(), directionToTarget)) {
+            				mining = true;
+            			}
+            			
+            			if (mining) {
+            				if (gc.canHarvest(unit.id(), directionToTarget)) gc.harvest(unit.id(), directionToTarget); // Can't harvest if replicated
+                			gameMap.decreaseKarbonite(unitMapLocation.getX(), unitMapLocation.getY(), (int) unit.workerHarvestAmount(), false);
+                			if (gc.karboniteAt(unitMapLocation) == 0) {
+                				System.out.println("Ran out of karbonite at " + unitMapLocation);
+                			}
             			}
             		}
             		
@@ -180,12 +191,16 @@ public class Player {
 	            			}
             			} catch (RuntimeException ex) {} // Don't care about checking a location outside vision
             			if (!pf.isTargeting() || targetKarboniteGone) {
-                			MapLocation target = gameMap.searchForKarbonite(unitMapLocation.getX(), unitMapLocation.getY());
-                			if (target == null) System.out.println(unit.id() + ": COULDN'T FIND TARGET");
-                			else System.out.println(unit.id() + ": new target: " + target);
+            				// Send units to different patches if havn't been touched yet
+            				MapLocation moveTarget = gameMap.getNextKarboniteBlobStart();
+            				System.out.println(unit.id() + ": Target after blob start: " + moveTarget);
+            				if (moveTarget == null) {
+            					moveTarget = gameMap.searchForKarbonite(unitMapLocation.getX(), unitMapLocation.getY());
+            				}
+            				System.out.println(unit.id() + ": Target after circle search: " + moveTarget);
                 			
                 			pf.updateMap(gameMap);
-                			boolean getTarget = pf.target(unitMapLocation.getX(), unitMapLocation.getY(), target.getX(), target.getY());
+                			boolean getTarget = pf.target(unitMapLocation.getX(), unitMapLocation.getY(), moveTarget.getX(), moveTarget.getY());
                 			if (!getTarget) {
                 				System.out.println(unit.id() + " messed up targetting");
                 			}

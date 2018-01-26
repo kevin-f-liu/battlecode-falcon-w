@@ -132,7 +132,7 @@ public class PathFinder {
 	
 	public MapLocation getTarget() {
 		try {
-			MapLocation target = new MapLocation(this.planet, endx, endy);
+			MapLocation target = new MapLocation(this.planet, this.endx, this.endy);
 			return target;
 		} catch (NullPointerException e) {
 			return null;

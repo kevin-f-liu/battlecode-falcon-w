@@ -17,6 +17,7 @@ public class FalconMap {
 	public HashMap<Character, ArrayList<MapNode>> nodeContentMap;
 	public ArrayList<MapNode> karboniteDeposits;
 	public ArrayList<ArrayList<MapNode>> karboniteBlobs; // Ordered in best to worst
+	private int karboniteBlobIndex;
 	public ArrayList<MapNode> impassableTerrain;
 	
 	public int width;
@@ -39,6 +40,7 @@ public class FalconMap {
 		 
 		 this.initUnitLegend();
 		 this.initMap(gcx);
+		 this.karboniteBlobIndex = 0;
 	}
 	
 	public void initUnitLegend() {
@@ -277,7 +279,30 @@ public class FalconMap {
 	}
 	
 	/**
-	 * Do a search for the nearest karbonite
+	 * Get the karbonite blobs in decreasing value
+	 * @return list of node lists
+	 */
+	public ArrayList<ArrayList<MapNode>> getKarboniteBlobs() {
+		return this.karboniteBlobs;
+	}
+	
+	/**
+	 * Get the next node in a new karbonite blob to start a worker on
+	 * @return Maplocation that the worker should start at
+	 * @return null if all the blobs have been touched already
+	 */
+	public MapLocation getNextKarboniteBlobStart() {
+		if (this.karboniteBlobIndex == this.karboniteBlobs.size() - 1) {
+			return null;
+		}
+		ArrayList<MapNode> blob = this.karboniteBlobs.get(this.karboniteBlobIndex);
+		this.karboniteBlobIndex++;
+		MapNode middleBlob = blob.get(blob.size() / 2); // Since everything is store sequetially, and the blob is found by bfs, the middle is roughly the middle of the patch
+		return new MapLocation(this.planet, middleBlob.x, middleBlob.y);
+	}
+	
+	/**
+	 * Do a search for the nearest karbonite, prefereably used local
 	 */
 	public MapLocation searchForKarbonite(int centerX, int centerY) {
 		// Search by expanding rings
@@ -361,7 +386,7 @@ public class FalconMap {
 						numSparseNodes++;
 					}
 				}
-				double score = (1.0 - (double) numSparseNodes / blob.size()) * totalKarbonite / ((maxx - minx + 1) * (maxy - miny + 1));
+				double score = (1.0 - (double) numSparseNodes / blob.size()) + totalKarbonite / ((maxx - minx + 1) * (maxy - miny + 1));
 				// Insert in descending order
 				int i = 0;
 				try {
