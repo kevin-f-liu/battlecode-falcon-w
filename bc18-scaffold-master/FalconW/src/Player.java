@@ -60,7 +60,6 @@ public class Player {
             VecUnit myVecUnits = gc.myUnits(); // Grab just our units
             PlayerUnits myUnits = new PlayerUnits(myVecUnits, OUR_TEAM);
             updateMap(gameMap, units); // Update unit locations and karbonite
-            myUnits.checkNewUnits(myVecUnits); // Update new unit references
             EnemyLocations enemies = new EnemyLocations(gc, ENEMY_TEAM); // grab a list of enemy locations
             
             // Mappings storing each type of unit
