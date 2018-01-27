@@ -36,7 +36,7 @@ public class Player {
 		 map.updateKarbonite();
 	}
 	
-	public static void replicateIfPossible(GameController gc, Unit unit, HashMap<Integer, Unit> workers) {
+	public static int replicateIfPossible(GameController gc, Unit unit, HashMap<Integer, Unit> workers) {
 		// Check worker ability heat
 		if (unit.abilityHeat() < 10) {
 			for (Direction dir : Direction.values()) {
@@ -44,11 +44,13 @@ public class Player {
 				if (gc.canReplicate(unit.id(), dir)) {
 					gc.replicate(unit.id(), dir);
 					System.out.println(unit.id() + ": REPLICATED");
-					Unit newUnit = gc.senseUnitAtLocation(unit.location().mapLocation().add(dir));
-					workers.put(newUnit.id(), newUnit);
+//					Unit newUnit = gc.senseUnitAtLocation(unit.location().mapLocation().add(dir));
+//					workers.put(newUnit.id(), newUnit);
+					return 1;
 				}
 			}
 		}
+		return 0;
 	}
 	
 	public static void main(String[] args) {
@@ -85,6 +87,7 @@ public class Player {
            
             // Mappings storing each type of unit
             HashMap<Integer, Unit> workers = myUnits.getWorkers();
+            int numWorker = workers.values().size();
             ArrayList<Integer> workersInBlob = new ArrayList<Integer>();
             HashMap<Integer, Unit> factories = myUnits.getFactories();
             HashMap<Integer, Unit> rockets = myUnits.getRockets();
@@ -204,6 +207,10 @@ public class Player {
                 			if (gc.karboniteAt(unitMapLocation) == 0) {
                 				System.out.println("Ran out of karbonite at " + unitMapLocation);
                 			}
+                			
+                			if (numWorker < maxWorkers) {
+                				replicateIfPossible(gc, unit, workers);
+                			}
             			}
             		}
             		
@@ -257,8 +264,8 @@ public class Player {
         		
         		// Replicate until the number of workers is at least the number of karbonite patches
         		// Done at the end becasue you can move replicate, not replicate move
-            	if (workers.values().size() < numKarboniteBlobs + numBuildingWorkers) {
-            		replicateIfPossible(gc, unit, workers);
+            	if (numWorker < numKarboniteBlobs + numBuildingWorkers) {
+            		numWorker += replicateIfPossible(gc, unit, workers);
             	}
             }
             
